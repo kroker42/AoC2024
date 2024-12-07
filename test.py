@@ -88,3 +88,87 @@ MXMXAXMASX""".split('\n')
     def test_task2(self):
         grid = elftasks.Grid(self.data)
         self.assertEqual(9, grid.count(elftasks.count_x_mas))
+
+###############
+
+
+class TestDay5(unittest.TestCase):
+    rules = """47|53
+97|13
+97|61
+97|47
+75|29
+61|13
+75|53
+29|13
+97|29
+53|29
+61|53
+97|53
+61|29
+47|13
+75|47
+97|75
+47|61
+75|61
+47|29
+75|13
+53|13
+
+75,47,61,53,29
+97,61,53,29,13
+75,29,13
+75,97,47,61,53
+61,13,29
+97,13,75,29,47"""
+    def test_task1(self):
+        rulebook = elftasks.PrintRules([line.strip() for line in self.rules.split('\n')])
+        self.assertEqual((0, 0), rulebook.validate_print_run([75,47,61,53,29]))
+        self.assertEqual((1, 4), rulebook.validate_print_run([97,13,75,29,47]))
+
+###############
+
+
+class TestDay6(unittest.TestCase):
+    data = """....#.....
+.........#
+..........
+..#.......
+.......#..
+..........
+.#..^.....
+........#.
+#.........
+......#..."""
+    def test_task1(self):
+        grid = self.data.split('\n')
+        self.assertEqual((6, 4), elftasks.get_map(grid))
+
+        obstacle, path = elftasks.find_obstacle((6, 4), (-1, 0), grid)
+        self.assertEqual([0, 4], obstacle)
+        self.assertEqual({(i,4) for i in range(1, 7)}, path)
+
+        obstacle, path = elftasks.find_obstacle((7, 7), (1, 0), grid)
+        self.assertEqual([10, 7], obstacle)
+
+        self.assertEqual(41, elftasks.path_length((6, 4), grid))
+
+
+
+###############
+
+
+class TestDay7(unittest.TestCase):
+    data = """190: 10 19
+3267: 81 40 27
+83: 17 5
+156: 15 6
+7290: 6 8 6 15
+161011: 16 10 13
+192: 17 8 14
+21037: 9 7 18 13
+292: 11 6 16 20"""
+
+
+    def test_task1(self):
+        equations = elftasks.get_equations(self.data.split('\n'))
