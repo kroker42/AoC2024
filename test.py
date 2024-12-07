@@ -151,7 +151,7 @@ class TestDay6(unittest.TestCase):
         obstacle, path = elftasks.find_obstacle((7, 7), (1, 0), grid)
         self.assertEqual([10, 7], obstacle)
 
-        self.assertEqual(41, elftasks.path_length((6, 4), grid))
+        self.assertEqual(41, len(elftasks.path_length((6, 4), grid)))
 
 
 
@@ -172,3 +172,6 @@ class TestDay7(unittest.TestCase):
 
     def test_task1(self):
         equations = elftasks.get_equations(self.data.split('\n'))
+
+
+

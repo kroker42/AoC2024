@@ -253,15 +253,54 @@ def path_length(guard, data):
         obstacle, path = find_obstacle(guard, direction, data)
         visited |= path
 
-    return len(visited)
+    return visited
+
+def find_added_obstacle(start, direction, data, new_obstacle_pos):
+    pos = np.add(start, direction)
+    while is_valid_coords(pos, data) and (tuple(pos) != new_obstacle_pos and data[pos[0]][pos[1]] != '#'):
+        pos = np.add(pos, direction)
+
+    return tuple(pos)
+
+
+def detect_loop(guard, data, new_obstacle_pos):
+    next_direction = {(-1, 0): (0, 1), (0, 1): (1, 0), (1, 0): (0, -1), (0, -1): (-1, 0)}
+
+    direction = (-1, 0)
+    obstacle = find_added_obstacle(guard, direction, data, new_obstacle_pos)
+    visited_obstacles = {obstacle: [direction]}
+
+    while is_valid_coords(obstacle, data):
+        guard = numpy.subtract(obstacle, direction)
+        direction = next_direction[direction]
+        obstacle = find_added_obstacle(guard, direction, data, new_obstacle_pos)
+        if obstacle in visited_obstacles:
+            if direction in visited_obstacles[obstacle]:
+                return 1
+            else:
+                visited_obstacles[obstacle].append(direction)
+        else:
+            visited_obstacles[obstacle] = [direction]
+    return 0
+
+
+def add_obstacles(guard, visited, data):
+    loops = 0
+    for pos in visited:
+        loops += detect_loop(guard, data, pos)
+
+    return loops
+
 
 def day6():
     data = [line.strip() for line in open('input06.txt')]
     start_time = time.time()
 
     guard = get_map(data)
-    task1 = path_length(guard, data)
-    task2 = None
+    path = path_length(guard, data)
+    task1 = len(path)
+
+    task2 = add_obstacles(guard, path, data)
 
     return time.time() - start_time, task1, task2
     
@@ -302,7 +341,6 @@ def day7():
     for eq in equations:
         if EvaluationTree(eq[0], eq[1]).evaluate([operator.mul, operator.add]):
             results.append(eq[0])
-
     task1 = sum(results)
 
     results = []
@@ -312,4 +350,5 @@ def day7():
     task2 = sum(results)
 
     return time.time() - start_time, task1, task2
-    
+        
+
