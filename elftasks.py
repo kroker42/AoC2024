@@ -7,6 +7,7 @@ import numpy
 import numpy as np
 from collections import Counter
 from itertools import pairwise
+from itertools import combinations
 
 
 ##############
@@ -352,3 +353,65 @@ def day7():
     return time.time() - start_time, task1, task2
         
 
+
+
+##############
+
+def find_masts(grid):
+    masts = {}
+    for r in range(len(grid)):
+        for c in range(len(grid[0])):
+            if grid[r][c] != '.':
+                if grid[r][c] in masts:
+                    masts[grid[r][c]].append((r, c))
+                else:
+                    masts[grid[r][c]] = [(r, c)]
+    return masts
+
+
+def find_antinodes(masts):
+    antinodes = set()
+    for positions in masts.values():
+        pairs = combinations(positions, 2)
+        for p in pairs:
+            dist = np.subtract(*p)
+            antinodes.add(tuple(np.add(p[0], dist)))
+            antinodes.add(tuple(np.add(p[1], -dist)))
+
+    return antinodes
+
+def nodes_in_grid(nodes, grid):
+    return [n for n in nodes if is_valid_coords(n, grid)]
+
+def find_harmonic_antinodes(masts, grid):
+    antinodes = set()
+    for positions in masts.values():
+        if len(positions) > 2:
+            antinodes.update(positions)
+
+        pairs = combinations(positions, 2)
+        for p in pairs:
+            dist = np.subtract(*p)
+
+            node = np.add(p[0], dist)
+            while is_valid_coords(node, grid):
+                antinodes.add(tuple(node))
+                node = np.add(node, dist)
+
+            node = np.add(p[1], -dist)
+            while is_valid_coords(node, grid):
+                antinodes.add(tuple(node))
+                node = np.add(node, -dist)
+
+    return antinodes
+
+def day8():
+    data = [line.strip() for line in open('input08.txt')]
+    start_time = time.time()
+
+    masts = find_masts(data)
+    task1 = len(nodes_in_grid(find_antinodes(masts), data))
+    task2 = len(find_harmonic_antinodes(masts, data))
+
+    return time.time() - start_time, task1, task2
+    
