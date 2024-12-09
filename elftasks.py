@@ -415,3 +415,56 @@ def day8():
 
     return time.time() - start_time, task1, task2
     
+
+##############
+
+def compress_disk(disk):
+    filesystem = []
+
+    files = disk[0::2]
+    spaces = disk[1::2]
+
+    last_file = len(files) - 1
+    last_file_size = files[-1]
+
+    curr_file = 0
+    curr_space = 0
+
+    while curr_file < last_file:
+        filesystem.extend(files[curr_file] * [curr_file]) # e.g. fs += '000'
+
+        while spaces[curr_space] > 0 and last_file > curr_space:
+            if curr_space < len(spaces) and last_file >= curr_file and last_file_size > 0:
+                no_spaces = min(spaces[curr_space], last_file_size)
+                filesystem.extend(no_spaces * [last_file])
+                spaces[curr_space] -= no_spaces
+                last_file_size -= no_spaces
+
+            if last_file_size == 0:
+                last_file -= 1
+                last_file_size = files[last_file]
+
+        curr_file += 1
+        curr_space += 1
+
+    if last_file_size > 0:
+        filesystem.extend(last_file_size * [last_file])
+
+    return filesystem
+
+
+def checksum(filesystem):
+    return sum([k * v for k, v in enumerate(filesystem)])
+
+
+
+def day9():
+    data = [line.strip() for line in open('input09.txt')]
+    disk = [int(x) for x in data[0]]
+    start_time = time.time()
+
+    task1 = checksum(compress_disk(disk))
+    task2 = None
+
+    return time.time() - start_time, task1, task2
+    
