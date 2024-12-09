@@ -216,3 +216,19 @@ class TestDay8(unittest.TestCase):
         antinodes = elftasks.nodes_in_grid(set(elftasks.find_antinodes(masts)), grid)
         self.assertEqual({(0, 6), (0, 11), (1, 3), (2, 4), (2, 10), (3, 2), (4, 9), (5, 1), (5, 6), (6, 3), (7, 0), (7, 7), (10, 10), (11, 10)},
                          set(antinodes))
+
+
+###############
+
+
+class TestDay9(unittest.TestCase):
+    def test_task1(self):
+        disk = [int(x) for x in "2333133121414131402"]
+        compressed_disk = elftasks.fragment_disk(disk)
+        self.assertEqual([int(x) for x in '0099811188827773336446555566'], compressed_disk)
+        self.assertEqual(1928, elftasks.checksum(compressed_disk))
+
+    def test_task2(self):
+        self.assertEqual(2858, elftasks.checksum(elftasks.compress_disk([int(x) for x in "2333133121414131402"])))
+        self.assertEqual(2858, elftasks.checksum([int(x) for x in "0099211177704403330000555506666000008888"]))
+

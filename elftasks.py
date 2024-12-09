@@ -418,53 +418,66 @@ def day8():
 
 ##############
 
-def compress_disk(disk):
+def fragment_disk(disk):
     filesystem = []
 
     files = disk[0::2]
     spaces = disk[1::2]
 
     last_file = len(files) - 1
-    last_file_size = files[-1]
 
-    curr_file = 0
-    curr_space = 0
+    curr_index = 0
 
-    while curr_file < last_file:
-        filesystem.extend(files[curr_file] * [curr_file]) # e.g. fs += '000'
+    while curr_index <= last_file:
+        filesystem.extend(files[curr_index] * [curr_index]) # e.g. fs += '000'
 
-        while spaces[curr_space] > 0 and last_file > curr_space:
-            if curr_space < len(spaces) and last_file >= curr_file and last_file_size > 0:
-                no_spaces = min(spaces[curr_space], last_file_size)
-                filesystem.extend(no_spaces * [last_file])
-                spaces[curr_space] -= no_spaces
-                last_file_size -= no_spaces
+        while spaces[curr_index] > 0 and last_file > curr_index:
+            if files[last_file] > 0:
+                no_blocks = min(spaces[curr_index], files[last_file])
+                filesystem.extend(no_blocks * [last_file])
+                spaces[curr_index] -= no_blocks
+                files[last_file] -= no_blocks
 
-            if last_file_size == 0:
+            if files[last_file] == 0:
                 last_file -= 1
-                last_file_size = files[last_file]
 
-        curr_file += 1
-        curr_space += 1
-
-    if last_file_size > 0:
-        filesystem.extend(last_file_size * [last_file])
+        curr_index += 1
 
     return filesystem
 
+def compress_disk(disk):
+    filesystem = []
+
+    files = list(enumerate(disk[0::2]))
+    spaces = disk[1::2]
+
+    for curr_index in range(len(files) - 1):
+        filesystem.extend(files[curr_index][1] * [files[curr_index][0]]) # e.g. fs += '000'
+
+        while spaces[curr_index] > 0:
+            rev_list = reversed(files[curr_index + 1:])
+            file_num, file_size = next((x for x in rev_list if x[0] > 0 and 0 < x[1] <= spaces[curr_index]), (0, spaces[curr_index]))
+            filesystem.extend(file_size * [file_num])
+            if file_num > 0:
+                files[file_num] = (0, file_size)
+                spaces[curr_index] -= file_size
+            else:
+                spaces[curr_index] = 0
+
+    filesystem.extend(files[-1][1] * [files[-1][0]]) # e.g. fs += '000'
+
+    return filesystem
 
 def checksum(filesystem):
     return sum([k * v for k, v in enumerate(filesystem)])
-
-
 
 def day9():
     data = [line.strip() for line in open('input09.txt')]
     disk = [int(x) for x in data[0]]
     start_time = time.time()
 
-    task1 = checksum(compress_disk(disk))
-    task2 = None
+    task1 = checksum(fragment_disk(disk))
+    task2 = checksum(compress_disk(disk))
 
     return time.time() - start_time, task1, task2
     
