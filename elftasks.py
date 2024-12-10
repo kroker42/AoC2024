@@ -481,3 +481,84 @@ def day9():
 
     return time.time() - start_time, task1, task2
     
+
+##############
+
+class IslandMap:
+    def __init__(self, map):
+        self.map = np.array(map)
+        print(self.map[(0,0)])
+        self.paths = {}
+        self.elevations, self.trails = self.index()
+
+    def index(self):
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        elevations = {i : [] for i in range(10)}
+        trails = {}
+        for r in range(len(self.map)):
+            for c in range(len(self.map[0])):
+                coords = (r, c)
+                elevation = self.map[coords]
+                elevations[int(elevation)].append(coords)
+
+                for dir in directions:
+                    neighbour = np.add(coords, dir)
+                    if is_valid_coords(neighbour, self.map) and self.map[tuple(neighbour)] == elevation - 1:
+                        if coords in trails:
+                            trails[coords].append(tuple(neighbour))
+                        else:
+                            trails[coords] = [tuple(neighbour)]
+
+        return elevations, trails
+
+    def score_trails(self):
+        scores = {coords : {coords} for coords in self.elevations[9]}
+
+        points = set(self.elevations[9])
+        while points:
+            next_points = set()
+            for p in points:
+                if p in self.trails:
+                    neighbours = self.trails[p]
+                    next_points.update(neighbours)
+                    for n in neighbours:
+                        if n in scores:
+                            scores[n].update(scores[p])
+                        else:
+                            scores[n] = scores[p].copy()
+
+            points = next_points
+
+        return sum([len(scores[i]) for i in self.elevations[0] if i in scores])
+
+    def score_distinct_trails(self):
+        scores = {coords : 1 for coords in self.elevations[9]}
+
+        points = set(self.elevations[9])
+        while points:
+            next_points = set()
+            for p in points:
+                if p in self.trails:
+                    neighbours = self.trails[p]
+                    next_points.update(neighbours)
+                    for n in neighbours:
+                        if n in scores:
+                            scores[n] += scores[p]
+                        else:
+                            scores[n] = scores[p]
+
+            points = next_points
+
+        return sum([scores[i] for i in self.elevations[0] if i in scores])
+
+
+def day10():
+    data = [[int(x) for x in line.strip()] for line in open('input10.txt')]
+    start_time = time.time()
+
+    map = IslandMap(data)
+    task1 = map.score_trails()
+    task2 = map.score_distinct_trails()
+
+    return time.time() - start_time, task1, task2
+    

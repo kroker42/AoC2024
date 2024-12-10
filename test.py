@@ -232,3 +232,26 @@ class TestDay9(unittest.TestCase):
         self.assertEqual(2858, elftasks.checksum(elftasks.compress_disk([int(x) for x in "2333133121414131402"])))
         self.assertEqual(2858, elftasks.checksum([int(x) for x in "0099211177704403330000555506666000008888"]))
 
+
+
+###############
+
+
+class TestDay10(unittest.TestCase):
+    def test_task1(self):
+        data = [[int(x) for x in line] for line in """89010123
+78121874
+87430965
+96549874
+45678903
+32019012
+01329801
+10456732""".split('\n')]
+        self.assertEqual(36, elftasks.IslandMap(data).score_trails())
+
+    def test_trivial_data(self):
+        data = [[int(x) for x in line] for line in """0123
+1234
+8765
+9876""".split('\n')]
+        self.assertEqual(1, elftasks.IslandMap(data).score_trails())
