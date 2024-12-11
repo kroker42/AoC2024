@@ -255,3 +255,26 @@ class TestDay10(unittest.TestCase):
 8765
 9876""".split('\n')]
         self.assertEqual(1, elftasks.IslandMap(data).score_trails())
+
+
+###############
+
+
+class TestDay11(unittest.TestCase):
+    def test_task1(self):
+        stones = [int(x) for x in "0 1 10 99 999".split(' ')]
+        self.assertEqual([1, 2024, 1, 0, 9, 9, 2021976], elftasks.blink(stones))
+        self.assertEqual(len([1, 2024, 1, 0, 9, 9, 2021976]), sum(elftasks.blink_at_buckets(elftasks.count_stones(stones)).values()))
+
+        stones = [int(x) for x in "125 17".split(' ')]
+        for i in range(6):
+            stones = elftasks.blink(stones)
+        exp = [int(x) for x in "2097446912 14168 4048 2 0 2 4 40 48 2024 40 48 80 96 2 8 6 7 6 0 3 2".split(' ')]
+        self.assertEqual(exp, stones)
+
+        stones = [int(x) for x in "125 17".split(' ')]
+        buckets = elftasks.count_stones(stones)
+        for i in range(6):
+            buckets = elftasks.blink_at_buckets(buckets)
+        self.assertEqual(len(exp), sum(buckets.values()))
+

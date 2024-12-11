@@ -487,7 +487,6 @@ def day9():
 class IslandMap:
     def __init__(self, map):
         self.map = np.array(map)
-        print(self.map[(0,0)])
         self.paths = {}
         self.elevations, self.trails = self.index()
 
@@ -559,6 +558,67 @@ def day10():
     map = IslandMap(data)
     task1 = map.score_trails()
     task2 = map.score_distinct_trails()
+
+    return time.time() - start_time, task1, task2
+    
+
+##############
+
+def blink(stones):
+    new_stones = []
+    for stone in stones:
+        if stone == 0:
+            new_stones.append(1)
+        elif len(str(stone)) % 2 == 0:
+            nums = str(stone)
+            new_stones.append(int(nums[:len(nums)//2]))
+            new_stones.append(int(nums[len(nums)//2:]))
+        else:
+            new_stones.append(stone * 2024)
+    return new_stones
+
+def count_stones(stones):
+    stone_buckets = {}
+    for stone in stones:
+        if stone in stone_buckets:
+            stone_buckets[stone] += 1
+        else:
+            stone_buckets[stone] = 1
+    return stone_buckets
+
+def update(buckets, stone, count):
+    if stone in buckets:
+        buckets[stone] += count
+    else:
+        buckets[stone] = count
+
+def blink_at_buckets(stone_buckets):
+    buckets = {}
+    for stone in stone_buckets:
+        if stone == 0:
+            update(buckets, 1, stone_buckets[0])
+        elif len(str(stone)) % 2 == 0:
+            nums = str(stone)
+            update(buckets, int(nums[:len(nums)//2]), stone_buckets[stone])
+            update(buckets, int(nums[len(nums)//2:]), stone_buckets[stone])
+        else:
+            update(buckets, stone * 2024, stone_buckets[stone])
+    return buckets
+
+def day11():
+    original_stones = [int(x) for line in open('input11.txt') for x in line.strip().split(' ')]
+    start_time = time.time()
+
+    stones = original_stones
+    for i in range(25):
+        stones = blink(stones)
+
+    task1 = len(stones)
+
+    buckets = count_stones(original_stones)
+    for i in range(75):
+        buckets = blink_at_buckets(buckets)
+    task2 = sum(buckets.values())
 
     return time.time() - start_time, task1, task2
     
