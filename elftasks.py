@@ -622,3 +622,86 @@ def day11():
 
     return time.time() - start_time, task1, task2
     
+
+##############
+
+class GardenPatch:
+    def __init__(self, map):
+        self.map = np.array(map)
+        self.visited = set()
+        self.patches = []
+
+    def find_patch(self, coords):
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        fence = 0
+        region = set(coords)
+
+        neighbours = []
+        if coords not in self.visited:
+            self.visited.add(coords)
+            for direction in directions:
+                neighbour = np.add(coords, direction)
+                if is_valid_coords(neighbour, self.map) and self.map[neighbour] == self.map[coords]:
+                    if neighbour not in self.visited:
+                        neighbours.append(neighbour)
+                else:
+                    fence += 1
+
+def day12():
+    data = [line.strip() for line in open('input12.txt')]
+    start_time = time.time()
+
+    task1 = None
+    task2 = None
+
+    return time.time() - start_time, task1, task2
+    
+
+##############
+
+"""Button A: X+94, Y+34
+Button B: X+22, Y+67
+Prize: X=8400, Y=5400"""
+
+def parse_button(data):
+    eq = data.split('+')
+    return [int(eq[1].split(',')[0]), int(eq[2])]
+
+def parse_prize(data):
+    eq = data.split('=')
+    return [int(eq[1].split(',')[0]), int(eq[2])]
+
+def parse_claw_machine(data):
+    button_a = parse_button(data[0])
+    button_b = parse_button(data[1])
+    m = np.array([[button_a[0], button_b[0]], [button_a[1], button_b[1]]])
+    v = np.array(parse_prize(data[2]))
+    return m, v
+
+
+
+def day13():
+    data = [line.strip() for line in open('input13.txt')]
+    start_time = time.time()
+
+    claw_machines = []
+    for i in range(0, len(data), 4):
+        claw_machines.append(parse_claw_machine(data[i: i + 3]))
+
+    moves = []
+    for machine in claw_machines:
+        moves.append(np.linalg.solve(*machine))
+
+    moves = [x for x in moves if abs(x[0] - np.rint(x[0])) < 0.001 and abs(x[1] - np.rint(x[1])) < 0.001 and 0 <= x[0] <= 100 and 0 <= x[1] <= 100]
+
+    task1 = sum([3 * x[0] + x[1] for x in moves])
+
+    moves = []
+    for machine in claw_machines:
+        moves.append(np.linalg.solve(machine[0], np.add(machine[1], np.array([10000000000000, 10000000000000]))))
+
+    moves = [x for x in moves if abs(x[0] - np.rint(x[0])) < 0.001 and abs(x[1] - np.rint(x[1])) < 0.001 and 0 <= x[0] and 0 <= x[1]]
+    task2 = sum([3 * x[0] + x[1] for x in moves])
+
+    return time.time() - start_time, task1, task2
+    

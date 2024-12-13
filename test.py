@@ -1,5 +1,6 @@
 import unittest
 import elftasks
+import numpy as np
 
 ###############
 
@@ -277,4 +278,53 @@ class TestDay11(unittest.TestCase):
         for i in range(6):
             buckets = elftasks.blink_at_buckets(buckets)
         self.assertEqual(len(exp), sum(buckets.values()))
+
+
+
+###############
+
+class TestDay12(unittest.TestCase):
+    data = """RRRRIICCFF
+RRRRIICCCF
+VVRRRCCFFF
+VVRCCCJFFF
+VVVVCJJCFE
+VVIVCCJJEE
+VVIIICJJEE
+MIIIIIJJEE
+MIIISIJEEE
+MMMISSJEEE""".split('\n')
+    def test_task1(self):
+        self.assertEqual(False, False)
+
+###############
+
+
+class TestDay13(unittest.TestCase):
+    data = """Button A: X+94, Y+34
+Button B: X+22, Y+67
+Prize: X=8400, Y=5400""".split('\n')
+    eq = """8400 = 94 x + 22 y; 5400 = 34 x + 67 y"""
+    def test_task1(self):
+        m, v = elftasks.parse_claw_machine(self.data)
+        self.assertEqual([94, 22], list(m[0]))
+        self.assertEqual([34, 67], list(m[1]))
+        self.assertEqual([8400, 5400], list(v))
+
+    data2 = """Button A: X+26, Y+66
+Button B: X+67, Y+21
+Prize: X=12748, Y=12176""".split('\n')
+
+    data3 = """Button A: X+17, Y+86
+Button B: X+84, Y+37
+Prize: X=7870, Y=6450""".split('\n')
+
+    data4 = """Button A: X+69, Y+23
+Button B: X+27, Y+71
+Prize: X=18641, Y=10279""".split('\n')
+
+    def test_no_solution(self):
+        m, v = elftasks.parse_claw_machine(self.data2)
+        m, v = elftasks.parse_claw_machine(self.data3)
+        m, v = elftasks.parse_claw_machine(self.data4)
 
