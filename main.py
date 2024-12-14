@@ -20,6 +20,7 @@ day_test_case = """###############
 
 
 class TestDay{day}(unittest.TestCase):
+    data = \"\"\"\"\"\".split('\n')
     def test_task1(self):
         self.assertEqual(False, elftasks.day{day}())"""
 
@@ -46,6 +47,7 @@ if __name__ == '__main__':
     run_tests()
 
     day = str(date.today().day)
+#    day = "12"
     try:
         run(eval("elftasks.day" + day))
     except AttributeError:

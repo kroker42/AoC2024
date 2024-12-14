@@ -626,26 +626,27 @@ def day11():
 ##############
 
 class GardenPatch:
-    def __init__(self, map):
-        self.map = np.array(map)
-        self.visited = set()
-        self.patches = []
+    def __init__(self, patch):
+        self.patch = np.array(patch)
+        self.areas = {}
 
-    def find_patch(self, coords):
+    def categorise(self):
+        for row in range(len(self.patch)):
+            for col in range(len(self.patch[0])):
+                self.areas.setdefault(self.patch[row][col], []).append((row, col))
+
+#        print(self.areas)
+
+    def find_regions(self, area):
         directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-        fence = 0
-        region = set(coords)
 
-        neighbours = []
-        if coords not in self.visited:
-            self.visited.add(coords)
+        regions = [set([area[0]])]
+
+        for coords in area[1:]:
             for direction in directions:
                 neighbour = np.add(coords, direction)
-                if is_valid_coords(neighbour, self.map) and self.map[neighbour] == self.map[coords]:
-                    if neighbour not in self.visited:
-                        neighbours.append(neighbour)
-                else:
-                    fence += 1
+                if neighbour in area:
+                    None
 
 def day12():
     data = [line.strip() for line in open('input12.txt')]
@@ -702,6 +703,68 @@ def day13():
 
     moves = [x for x in moves if abs(x[0] - np.rint(x[0])) < 0.001 and abs(x[1] - np.rint(x[1])) < 0.001 and 0 <= x[0] and 0 <= x[1]]
     task2 = sum([3 * x[0] + x[1] for x in moves])
+
+    return time.time() - start_time, task1, task2
+    
+
+##############
+
+"""p=6,3 v=-1,-3"""
+def parse_robot(position):
+    bits = position.split('=')
+    position = tuple([int(x) for x in bits[1].split(' ')[0].split(',')])
+    velocity = tuple([int(x) for x in bits[2].split(',')])
+    return position, velocity
+
+def move_robot(time, space, position, velocity):
+    return np.mod(np.add(position, time * np.array(velocity)), space)
+
+def count_bots(quadrant, bots):
+    quad_bots = [bot for bot in bots if quadrant[0][0] <= bot[0] < quadrant[1][0] and quadrant[0][1] <= bot[1] < quadrant[1][1]]
+    return len(quad_bots)
+
+def safety_factor(bots, quads):
+    return math.prod([count_bots(q, bots) for q in quads])
+
+def get_quadrants(space):
+    return [[(0, 0), (space[0] // 2, space[1] // 2)], [(0, space[1] // 2 + 1), (space[0] // 2, space[1])],
+            [(space[0] // 2 + 1, 0), (space[0], space[1] // 2)], [(space[0] // 2 + 1, space[1] // 2 + 1), space]]
+
+
+def print_robots(robots, space):
+    positions = {}
+    for r in robots:
+        if tuple(r) in positions:
+            positions[tuple(r)] += 1
+        else:
+            positions[tuple(r)] = 1
+
+    for row in range(space[1]):
+        line = ""
+        for col in range(space[0]):
+            line += '.' if (col, row) not in positions else str(positions[(col, row)])
+        print(line)
+
+
+
+
+def day14():
+    data = [line.strip() for line in open('input14.txt')]
+    start_time = time.time()
+
+    robots = [parse_robot(r) for r in data]
+    space = (101, 103)
+    moved_bots = [move_robot(100, space, *r) for r in robots]
+    quadrants = get_quadrants(space)
+    task1 = safety_factor(moved_bots, quadrants)
+
+    for i in range(4000, 10000):
+        moved_bots = [tuple(move_robot(i, space, *r)) for r in robots]
+        if len(set(moved_bots)) == len(robots):
+            print(i)
+            print_robots(moved_bots, space)
+
+    task2 = 6771
 
     return time.time() - start_time, task1, task2
     

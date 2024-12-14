@@ -295,6 +295,9 @@ MIIIIIJJEE
 MIIISIJEEE
 MMMISSJEEE""".split('\n')
     def test_task1(self):
+        patch = elftasks.GardenPatch(self.data)
+        patch.categorise()
+
         self.assertEqual(False, False)
 
 ###############
@@ -328,3 +331,26 @@ Prize: X=18641, Y=10279""".split('\n')
         m, v = elftasks.parse_claw_machine(self.data3)
         m, v = elftasks.parse_claw_machine(self.data4)
 
+
+
+###############
+
+
+class TestDay14(unittest.TestCase):
+    data = """p=0,4 v=3,-3
+p=6,3 v=-1,-3
+p=10,3 v=-1,2
+p=2,0 v=2,-1
+p=0,0 v=1,3
+p=3,0 v=-2,-2
+p=7,6 v=-1,-3
+p=3,0 v=-1,-2
+p=9,3 v=2,3
+p=7,3 v=-1,2
+p=2,4 v=2,-3
+p=9,5 v=-3,-3""".split('\n')
+    def test_task1(self):
+        self.assertEqual(((0, 4), (3, -3)), elftasks.parse_robot(self.data[0]))
+
+        robots = [elftasks.parse_robot(r) for r in self.data]
+        self.assertEqual((1, 3), tuple(elftasks.move_robot(5, (11, 7), (2, 4), (2, -3))))
