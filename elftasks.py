@@ -628,32 +628,103 @@ def day11():
 class GardenPatch:
     def __init__(self, patch):
         self.patch = np.array(patch)
-        self.areas = {}
+        self.regions = []
+        self.fenced_off = {}
 
-    def categorise(self):
-        for row in range(len(self.patch)):
-            for col in range(len(self.patch[0])):
-                self.areas.setdefault(self.patch[row][col], []).append((row, col))
+    # def categorise(self):
+    #     for row in range(len(self.patch)):
+    #         for col in range(len(self.patch[0])):
+    #             self.areas.setdefault(self.patch[row][col], []).append((row, col))
 
-#        print(self.areas)
 
-    def find_regions(self, area):
+    def find_neighbours(self, coords):
         directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
-        regions = [set([area[0]])]
+        neighbours = []
+        for dir in directions:
+            n = np.add(coords, dir)
+            if is_valid_coords(n, self.patch) and self.patch[*n] == self.patch[*coords]:
+                neighbours.append(tuple(n))
 
-        for coords in area[1:]:
-            for direction in directions:
-                neighbour = np.add(coords, direction)
-                if neighbour in area:
-                    None
+        return neighbours
+
+    def find_regions(self):
+        for row in range(len(self.patch)):
+            for col in range(len(self.patch[0])):
+                coords = (row, col)
+                if coords not in self.fenced_off:
+                    neighbours = self.find_neighbours(coords)
+                    self.fenced_off[coords] = neighbours.copy()
+                    region = {coords}
+
+                    i = 0
+                    while i < len(neighbours):
+                        if tuple(neighbours[i]) not in self.fenced_off:
+                            new_neighbours = self.find_neighbours(neighbours[i])
+                            self.fenced_off[tuple(neighbours[i])] = new_neighbours.copy()
+                            neighbours.extend(new_neighbours)
+                            region.add(tuple(neighbours[i]))
+                        i += 1
+
+                    self.regions.append(region)
+
+    def is_outie_corner(self, coord):
+        return self.fenced_off[coord][0][0] != self.fenced_off[coord][1][0] and \
+               self.fenced_off[coord][0][1] != self.fenced_off[coord][1][1]
+
+    def is_innie_corner(self, coord, region):
+        diagonals = [(-1, -1), (1, 1), (1, -1), (-1, 1)]
+
+        no_corners = 0
+
+        for diagonal in diagonals:
+            if tuple(np.add(coord, (diagonal[0], 0))) in self.fenced_off[coord] and \
+                tuple(np.add(coord, (0, diagonal[1]))) in self.fenced_off[coord]:
+                no_corners += tuple(np.add(coord, diagonal)) not in region
+
+        return no_corners
+
+    def find_sides(self, region):
+        coords = sorted(region)
+        sides = 0
+
+        for coord in coords:
+            no_nbrs = len(self.fenced_off[coord])
+            if no_nbrs == 0:
+                sides += 4
+            elif no_nbrs == 1:
+                sides += 2
+            elif no_nbrs == 2:
+                sides += self.is_outie_corner(coord)
+                sides += self.is_innie_corner(coord, region)
+            else:
+                sides += self.is_innie_corner(coord, region)
+
+        return sides
+
 
 def day12():
-    data = [line.strip() for line in open('input12.txt')]
+    data = [list(line.strip()) for line in open('input12.txt')]
     start_time = time.time()
 
-    task1 = None
-    task2 = None
+    patch = GardenPatch(data)
+    patch.find_regions()
+
+    prices = []
+    for region in patch.regions:
+        fence = 0
+        for coords in region:
+            fence += 4 - len(patch.fenced_off[coords])
+        prices.append(len(region) * fence)
+
+    task1 = sum(prices)
+
+    prices = []
+    for region in patch.regions:
+        sides = patch.find_sides(region)
+        prices.append(len(region) * sides)
+
+    task2 = sum(prices)
 
     return time.time() - start_time, task1, task2
     
@@ -746,8 +817,6 @@ def print_robots(robots, space):
         print(line)
 
 
-
-
 def day14():
     data = [line.strip() for line in open('input14.txt')]
     start_time = time.time()
@@ -765,6 +834,233 @@ def day14():
             print_robots(moved_bots, space)
 
     task2 = 6771
+
+    return time.time() - start_time, task1, task2
+    
+
+##############
+"""
+########
+#..O.O.#
+##@.O..#
+#...O..#
+#.#.O..#
+#...O..#
+#......#
+########
+"""
+
+class Warehouse:
+    def __init__(self, data):
+        self.data = data
+        self.robot = self.find_robot()
+        self.changes = {} # (4, 5) : 'O'
+
+    def find_robot(self):
+        for i in range(len(self.data)):
+            if '@' in self.data[i]:
+                return i, self.data[i].index('@')
+        return False
+
+    def print(self):
+        for r in range(len(self.data)):
+            row = list(self.data[r])
+            for c in range(len(self.data[0])):
+                if (r, c) in self.changes:
+                    row[c] = self.changes[(r, c)]
+                if (r, c) == self.robot:
+                    row[c] = '@'
+            print("".join(row))
+
+    def is_a(self, pos, obj_type):
+        return (pos in self.changes and self.changes[pos] == obj_type) or \
+            (pos not in self.changes and self.data[pos[0]][pos[1]] == obj_type)
+
+    def has_box(self, pos):
+        return self.is_a(pos, 'O')
+
+    def is_empty(self, pos):
+        return self.is_a(pos, '.') or self.is_a(pos, '@')
+
+    def is_wall(self, pos):
+        return self.is_a(pos, '#')
+
+    def move(self, pos, direction):
+        new_pos = tuple(np.add(pos, direction))
+        if not is_valid_coords(new_pos, self.data):
+            raise ValueError(new_pos)
+        return new_pos
+
+    def move_boxes(self, pos, direction):
+        if not self.has_box(pos):
+            return
+
+        new_pos = pos
+        while self.has_box(new_pos):
+            new_pos = self.move(new_pos, direction)
+
+        if self.is_empty(new_pos):
+            self.changes[pos] = '.'
+            self.changes[new_pos] = 'O'
+
+    def move_robot(self, moves):
+        directions = {'>': np.array([0, 1]), '^': np.array([-1, 0]),
+                      'v': np.array([1, 0]), '<': np.array([0, -1])}
+
+        for move in moves:
+            new_pos = self.move(self.robot, directions[move])
+            self.move_boxes(new_pos, directions[move])
+            if self.is_empty(new_pos):
+                self.robot = new_pos
+
+        return self.robot
+
+    def gps_coords(self):
+        gps = []
+        for r in range(len(self.data)):
+            for c in range(len(self.data[0])):
+                if self.has_box((r, c)):
+                    gps.append((r, c))
+
+        return sum([100 * x + y for (x, y) in gps])
+
+def inflate(data):
+    new_map = []
+    for row in data:
+        new_map.append([])
+        for ch in row:
+            match ch:
+                case '.':
+                    new_map[-1].extend('..')
+                case '@':
+                    new_map[-1].extend('@.')
+                case '#':
+                    new_map[-1].extend('##')
+                case 'O':
+                    new_map[-1].extend('[]')
+                case _:
+                    raise ValueError(_)
+
+    return new_map
+
+class HyperWarehouse(Warehouse):
+    def __init__(self, data):
+        super().__init__(inflate(data))
+
+    def has_box(self, pos):
+        return self.is_a(pos, '[') or self.is_a(pos, ']')
+
+    def get_symbol(self, pos):
+        if pos in self.changes:
+            return self.changes[pos]
+        else:
+            return self.data[pos[0]][pos[1]]
+
+    def get_box_boundary(self, pos):
+        if not self.has_box(pos):
+            raise ValueError(pos)
+
+        if self.get_symbol(pos) == '[':
+            return pos, tuple(np.add(pos, (0, 1)))
+        else:
+            return tuple(np.add(pos, (0, -1))), pos
+
+    def can_move(self, pos, direction):
+        if not self.has_box(pos):
+            raise ValueError(pos)
+
+        result = []
+
+        boxes_to_move = list(self.get_box_boundary(pos))
+        while boxes_to_move:
+            new_boxes_to_move = []
+
+            for box in boxes_to_move:
+                new_pos = tuple(np.add(box, direction))
+                if new_pos not in boxes_to_move and new_pos not in new_boxes_to_move:
+                    if self.is_wall(new_pos):
+                        return False
+
+                    if self.has_box(new_pos):
+                        new_boxes_to_move.extend(self.get_box_boundary(new_pos))
+
+            result.extend(boxes_to_move)
+            boxes_to_move = new_boxes_to_move.copy()
+
+        return result
+
+    def move_box(self, box, direction):
+        # if not self.has_box(box[0]) or not self.has_box(box[1]):
+        #     print(self.get_symbol(box[0]), self.get_symbol(box[1]))
+        #     raise ValueError(box)
+
+        new_box = tuple(np.add(box[0], direction)), tuple(np.add(box[1], direction))
+        for pos in new_box:
+            if not is_valid_coords(pos, self.data):
+                raise ValueError(pos)
+
+        self.changes[box[0]] = '.'
+        self.changes[box[1]] = '.'
+        self.changes[new_box[0]] = '['
+        self.changes[new_box[1]] = ']'
+
+    def move_robot(self, moves):
+        directions = {'>': np.array([0, 1]), '^': np.array([-1, 0]),
+                      'v': np.array([1, 0]), '<': np.array([0, -1])}
+
+        for move in moves:
+            new_pos = self.move(self.robot, directions[move])
+
+            if self.has_box(new_pos):
+                boxes = self.can_move(new_pos, directions[move])
+                if boxes:
+                    for i in reversed(range(0, len(boxes), 2)):
+                        self.move_box((boxes[i], boxes[i+1]), directions[move])
+
+            if self.is_empty(new_pos):
+                self.robot = new_pos
+
+        return self.robot
+
+    def gps_coords(self):
+        gps = []
+        for r in range(len(self.data)):
+            for c in range(len(self.data[0])):
+                if self.get_symbol((r, c)) == '[':
+                    gps.append((r, c))
+
+        return sum([100 * x + y for (x, y) in gps])
+
+
+def day15():
+    data = [line.strip() for line in open('input15.txt')]
+    start_time = time.time()
+
+    break_line = data.index('')
+    warehouse = Warehouse(data[:break_line])
+
+    moves = []
+    for m in data[break_line + 1 :]:
+        moves.extend(m)
+    warehouse.move_robot(moves)
+    task1 = warehouse.gps_coords()
+
+    hyper_warehouse = HyperWarehouse(data[:break_line])
+    hyper_warehouse.move_robot(moves)
+    task2 = hyper_warehouse.gps_coords()
+
+    return time.time() - start_time, task1, task2
+    
+
+##############
+
+
+def day16():
+    data = [line.strip().split() for line in open('input16.txt')]
+    start_time = time.time()
+
+    task1 = None
+    task2 = None
 
     return time.time() - start_time, task1, task2
     
