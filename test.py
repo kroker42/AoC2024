@@ -284,7 +284,7 @@ class TestDay11(unittest.TestCase):
 ###############
 
 class TestDay12(unittest.TestCase):
-    data = """RRRRIICCFF
+    data = [ list(x) for x in """RRRRIICCFF
 RRRRIICCCF
 VVRRRCCFFF
 VVRCCCJFFF
@@ -293,12 +293,31 @@ VVIVCCJJEE
 VVIIICJJEE
 MIIIIIJJEE
 MIIISIJEEE
-MMMISSJEEE""".split('\n')
+MMMISSJEEE""".split('\n')]
     def test_task1(self):
         patch = elftasks.GardenPatch(self.data)
-        patch.categorise()
+        patch.find_regions()
 
-        self.assertEqual(False, False)
+        prices = []
+        for region in patch.regions:
+            fence = 0
+            for coords in region:
+                fence += 4 - len(patch.fenced_off[coords])
+            prices.append(len(region) * fence)
+
+        self.assertEqual(1930, sum(prices))
+
+    def test_find_sides(self):
+        patch = elftasks.GardenPatch(self.data)
+        patch.find_regions()
+
+        prices = []
+
+        for region in patch.regions:
+            sides = patch.find_sides(region)
+            prices.append(len(region) * sides)
+
+        self.assertEqual(1206, sum(prices))
 
 ###############
 
@@ -354,3 +373,230 @@ p=9,5 v=-3,-3""".split('\n')
 
         robots = [elftasks.parse_robot(r) for r in self.data]
         self.assertEqual((1, 3), tuple(elftasks.move_robot(5, (11, 7), (2, 4), (2, -3))))
+
+
+###############
+
+
+class TestDay15(unittest.TestCase):
+    data = """########
+#..O.O.#
+##@.O..#
+#...O..#
+#.#.O..#
+#...O..#
+#......#
+########
+
+<^^>>>vv<v>>v<<""".split('\n')
+    def test_task1(self):
+        warehouse = elftasks.Warehouse(self.data[:8])
+        self.assertEqual((2, 2), warehouse.robot)
+        self.assertEqual((2, 2), warehouse.move_robot("<"))
+        self.assertEqual((1, 2), warehouse.move_robot("^"))
+        self.assertEqual((1, 2), warehouse.move_robot("^"))
+
+        self.assertEqual((1, 3), warehouse.move_robot(">"))
+        self.assertEqual('.', warehouse.changes[(1,3)])
+        self.assertEqual('O', warehouse.changes[(1,4)])
+        self.assertEqual((1, 4), warehouse.move_robot(">"))
+        self.assertEqual('.', warehouse.changes[(1,4)])
+        self.assertEqual('O', warehouse.changes[(1,6)])
+
+        self.assertEqual((1, 4), warehouse.move_robot(">"))
+
+        self.assertEqual((2, 4), warehouse.move_robot("v"))
+        self.assertEqual('.', warehouse.changes[(2, 4)])
+        self.assertEqual('O', warehouse.changes[(6, 4)])
+
+        changes = warehouse.changes.copy()
+
+        self.assertEqual((2, 4), warehouse.move_robot("v"))
+        self.assertEqual((2, 3), warehouse.move_robot("<"))
+        self.assertEqual((3, 3), warehouse.move_robot("v"))
+        self.assertEqual(changes, warehouse.changes)
+
+        self.assertEqual((3, 4), warehouse.move_robot(">"))
+        self.assertEqual('.', warehouse.changes[(3, 4)])
+        self.assertEqual('O', warehouse.changes[(3, 5)])
+
+        self.assertEqual((3, 5), warehouse.move_robot(">"))
+        self.assertEqual('.', warehouse.changes[(3, 5)])
+        self.assertEqual('O', warehouse.changes[(3, 6)])
+
+        self.assertEqual((4, 5), warehouse.move_robot("v"))
+
+        self.assertEqual((4, 4), warehouse.move_robot("<"))
+        self.assertEqual('.', warehouse.changes[(4, 4)])
+        self.assertEqual('O', warehouse.changes[(4, 3)])
+        self.assertEqual((4, 4), warehouse.robot)
+
+    def test_hyper_warehouse(self):
+        warehouse = elftasks.HyperWarehouse(self.data[:8])
+
+        self.assertEqual(((1, 6), (1, 7)), warehouse.get_box_boundary((1, 6)))
+        self.assertEqual(((1, 6), (1, 7)), warehouse.get_box_boundary((1, 7)))
+
+        self.assertEqual([(1, 6), (1, 7)], warehouse.can_move((1,6), (0, 1)))
+        self.assertEqual([(1, 6), (1, 7)], warehouse.can_move((1, 6), (0, 1)))
+        self.assertEqual([(2, 8), (2, 9), (3, 8), (3, 9), (4, 8), (4, 9), (5, 8), (5, 9)],
+                         warehouse.can_move((2,8), (1, 0)))
+
+
+    def test_cascading_move(self):
+        data = """##########
+#..O..O.O#
+#......O.#
+#.OO..O.O#
+#..O@..O.#
+#O#..O...#
+#O..O..O.#
+#.OO.O.OO#
+#....O...#
+##########""".split('\n')
+
+        warehouse = elftasks.HyperWarehouse(data)
+        warehouse.move_box(((6, 14), (6, 15)), (0, 1))
+        self.assertEqual([(6, 15), (6, 16), (7, 14), (7, 15), (7, 16), (7, 17)], warehouse.can_move((6,15), (1, 0)))
+
+    def test_hyper_gps(self):
+        data = """##########
+#..O..O.O#
+#......O.#
+#.OO..O.O#
+#..O@..O.#
+#O#..O...#
+#O..O..O.#
+#.OO.O.OO#
+#....O...#
+##########""".split('\n')
+
+        move_data = """<vv>^<v^>v>^vv^v>v<>v^v<v<^vv<<<^><<><>>v<vvv<>^v^>^<<<><<v<<<v^vv^v>^
+vvv<<^>^v^^><<>>><>^<<><^vv^^<>vvv<>><^^v>^>vv<>v<<<<v<^v>^<^^>>>^<v<v
+><>vv>v^v^<>><>>>><^^>vv>v<^^^>>v^v^<^^>v^^>v^<^v>v<>>v^v^<v>v^^<^^vv<
+<<v<^>>^^^^>>>v^<>vvv^><v<<<>^^^vv^<vvv>^>v<^^^^v<>^>vvvv><>>v^<<^^^^^
+^><^><>>><>^^<<^^v>>><^<v>^<vv>>v>>>^v><>^v><<<<v>>v<v<v>vvv>^<><<>^><
+^>><>^v<><^vvv<^^<><v<<<<<><^v<<<><<<^^<v<^^^><^>>^<v^><<<^>>^v<v^v<v^
+>^>>^v>vv>^<<^v<>><<><<v<<v><>v<^vv<<<>^^v^>^^>>><<^v>>v^v><^^>>^<>vv^
+<><^^>^^^<><vvvvv^v<v<<>^v<v>v<<^><<><<><<<^^<<<^<<>><<><^^^>^^<>^>v<>
+^^>vv<^v^v<vv>^<><v<^v>^^^>>>^^vvv^>vvv<>>>^<^>>>>>^<<^v>^vvv<>^<><<v>
+v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^""".split('\n')
+
+        moves = []
+        for line in move_data:
+            moves.extend(line)
+
+        warehouse = elftasks.HyperWarehouse(data)
+        warehouse.move_robot(moves)
+        self.assertEqual(9021, warehouse.gps_coords())
+
+
+###############
+
+
+class TestDay16(unittest.TestCase):
+    data = """###############
+#.......#....E#
+#.#.###.#.###.#
+#.....#.#...#.#
+#.###.#####.#.#
+#.#.#.......#.#
+#.#.#####.###.#
+#...........#.#
+###.#.#####.#.#
+#...#.....#.#.#
+#.#.#.###.#.#.#
+#.....#...#.#.#
+#.###.#.#.#.#.#
+#S..#.....#...#
+###############""".split('\n')
+    def test_task1(self):
+        maze = elftasks.Maze(self.data)
+        self.assertEqual(((13, 1), (1, 13)), (maze.start, maze.end))
+        self.assertEqual(7036, min([path[-1][2] for path in maze.paths]))
+
+    def test_maze(self):
+        data = """#################
+#...#...#...#..E#
+#.#.#.#.#.#.#.#.#
+#.#.#.#...#...#.#
+#.#.#.#.###.#.#.#
+#...#.#.#.....#.#
+#.#.#.#.#.#####.#
+#.#...#.#.#.....#
+#.#.#####.#.###.#
+#.#.#.......#...#
+#.#.###.#####.###
+#.#.#...#.....#.#
+#.#.#.#####.###.#
+#.#.#.........#.#
+#.#.#.#########.#
+#S#.............#
+#################""".split('\n')
+        maze = elftasks.Maze(data)
+        self.assertEqual(11048, min([path[-1][2] for path in maze.paths]))
+
+        min_paths = [path for path in maze.paths if path[-1][2] == 11048]
+        tiles = set()
+        for path in min_paths:
+            [tiles.add(t[0]) for t in path]
+
+#        self.assertEqual(64, len(tiles))
+
+
+###############
+
+
+class TestDay17(unittest.TestCase):
+    def test_small(self):
+        debugger = elftasks.Debugger(0, 0, 9, [2,6])
+        debugger.run()
+        self.assertEqual(1, debugger.B)
+
+        debugger = elftasks.Debugger(0, 29, 0, [1, 7])
+        debugger.run()
+        self.assertEqual(26, debugger.B)
+
+        debugger = elftasks.Debugger(0, 2024, 43690, [4, 0])
+        debugger.run()
+        self.assertEqual(44354, debugger.B)
+
+        debugger = elftasks.Debugger(10, 0, 0, [5,0,5,1,5,4])
+        debugger.run()
+        self.assertEqual([0, 1, 2], debugger.output)
+
+    def test_task1(self):
+        debugger = elftasks.Debugger(729, 0, 0, [0,1,5,4,3,0])
+        debugger.run()
+        self.assertEqual([4,6,3,5,6,3,5,2,1,0], debugger.output)
+
+    def test_task(self):
+        debugger = elftasks.Debugger(2024, 0, 0, [0,1,5,4,3,0])
+        debugger.run()
+        self.assertEqual([4,2,5,6,7,7,7,7,3,1,0], debugger.output)
+        self.assertEqual(0, debugger.A)
+
+    def test_task2(self):
+        debugger = elftasks.Debugger(117440, 0, 0, [0,1,5,4,3,0], [0,1,5,4,3,0])
+        debugger.run()
+#        self.assertEqual([0,1,5,4,3,0], debugger.output)
+
+
+###############
+import re
+import functools
+
+class TestDay19(unittest.TestCase):
+    towels = """r, wr, b, g, bwu, rb, gb, br""".split(', ')
+    designs = """brwrr
+bggr
+gbbr
+rrbgbr
+ubwu
+bwurrg
+brgr
+bbrgwb""".split('\n')
+    def test_task1(self):
+        designer = elftasks.TowelDesignMatchingController(self.towels, self.designs)
+        matches = designer.match_designs()
+        self.assertEqual(6, sum(matches))

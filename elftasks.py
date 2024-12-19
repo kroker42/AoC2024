@@ -1054,12 +1054,210 @@ def day15():
 
 ##############
 
+class Maze:
+    def __init__(self, maze):
+        self.maze = maze
+        self.start, self.end = self.parse_maze()
+        self.paths = []
+        self.visited = {self.start: 0}
+        self.find_paths()
+
+    def parse_maze(self):
+        start = (0, 0)
+        end = (0, 0)
+
+        for r in range(len(self.maze)):
+            if 'E' in self.maze[r]:
+                end = (r, self.maze[r].index('E'))
+
+            if 'S' in self.maze[r]:
+                start = (r, self.maze[r].index('S'))
+
+        return start, end
+
+    def find_new_path(self, path, direction, weight):
+        neighbour = tuple(np.add(path[-1][0], direction))
+
+        if is_valid_coords(neighbour, self.maze) and \
+                self.maze[neighbour[0]][neighbour[1]] != '#' and \
+                (neighbour not in self.visited or self.visited[neighbour] >= path[-1][2] + weight):
+            self.visited[neighbour] = path[-1][2] + weight
+            return path.copy() + [(neighbour, direction, path[-1][2] + weight)]
+        else:
+            return []
+
+    def find_paths(self):
+        paths = [[(self.start, (0, 1), 0)]]
+
+        while paths:
+            new_paths = []
+            for path in paths:
+                directions = [(path[-1][1], 1),
+                              (tuple(np.multiply(tuple(reversed(path[-1][1])), -1)), 1001),
+                              (tuple(reversed(path[-1][1])), 1001)]
+                for direction in directions:
+                    new_path = self.find_new_path(path, direction[0], direction[1])
+                    if new_path:
+                        if new_path[-1][0] == self.end:
+                            self.paths.append(new_path)
+                        else:
+                            new_paths.append(new_path)
+            paths = new_paths
+
 
 def day16():
-    data = [line.strip().split() for line in open('input16.txt')]
+    data = [line.strip() for line in open('input16.txt')]
     start_time = time.time()
 
-    task1 = None
+    maze = Maze(data)
+    task1 = min([path[-1][2] for path in maze.paths])
+
+    min_paths = [path for path in maze.paths if path[-1][2] == task1]
+
+    tiles = set()
+    for path in min_paths:
+        [tiles.add(t[0]) for t in path]
+    task2 = len(tiles)
+
+    return time.time() - start_time, task1, task2
+    
+
+##############
+
+class Debugger:
+    def __init__(self, A, B, C, program, exp_output = []):
+        self.A = A
+        self.B = B
+        self.C = C
+        self.program = program
+        self.exp_output = exp_output
+        self.historical_As = set([self.A])
+        self.output = []
+        self.instruction = 0
+        self.operands = {0: (lambda: 0), 1: (lambda: 1), 2: (lambda: 2), 3: (lambda: 3),
+                         4: (lambda: self.A),
+                         5: (lambda: self.B),
+                         6: (lambda: self.C),
+                         7: None}
+
+        self.instructions = {0: (lambda x: self.adv(x)),
+                             1: (lambda x: setattr(self, 'B', self.B ^ x)),
+                             2: (lambda x: setattr(self, 'B', self.operands[x]() % 8)),
+                             3: (lambda x: setattr(self, 'instruction', x) if self.A != 0 else None),
+                             4: (lambda x: setattr(self, 'B', self.B ^ self.C)),
+                             5: (lambda x: self.out(x)),
+                             6: (lambda x: setattr(self, 'B', self.A // pow(2, self.operands[x]()))),
+                             7: (lambda x: setattr(self, 'C', self.A // pow(2, self.operands[x]())))}
+
+    def adv(self, x):
+        new_A = self.A // pow(2, self.operands[x]())
+        if new_A in self.historical_As:
+            raise ValueError(new_A)
+
+        self.A = new_A
+        self.historical_As.add(new_A)
+
+    def out(self, x):
+        self.output = self.output + [self.operands[x]() % 8]
+
+    def run(self):
+        while self.instruction < len(self.program) - 1:
+            i = self.instruction
+            self.instructions[self.program[self.instruction]](self.program[i + 1])
+#            print(self.instruction, self.A, self.B, self.C, self.output)
+            if self.instruction == i: # program didn't jump
+                self.instruction += 2
+
+
+def day17():
+#    data = [line.strip().split() for line in open('input17.txt')]
+    start_time = time.time()
+
+    A = 50230824
+    B = 0
+    C = 0
+    program = [2,4,1,3,7,5,0,3,1,4,4,7,5,5,3,0]
+
+    debugger = Debugger(A, B, C, program)
+    debugger.run()
+
+    task1 = str(debugger.output).replace(' ', '')
+
+
+    debugger2 = Debugger(0, B, C, program)
+    try:
+        debugger2.run()
+    except Exception:
+        pass
+
+    i = 35184372078800
+    i = 35184374468875
+    while debugger2.output != program:
+        debugger2 = Debugger(i, B, C, program)
+        try:
+            debugger2.run()
+        except Exception:
+            pass
+
+#        print(i, program, debugger2.output)
+        i += 1
+
+    task2 = i
+
+    return time.time() - start_time, task1, task2
+    
+
+##############
+class TowelDesignMatchingController:
+    def __init__(self, towels, designs):
+        self.towels = towels
+        self.designs = designs
+        self.matches = {}
+
+    def match(self, design):
+        if design not in self.matches:
+            self.matches[design] = self.match_design(design)
+        return self.matches[design]
+
+    def match_design(self, design):
+        if not design:
+            return True
+
+        is_match = False
+
+        for towel in self.towels:
+            positions = [occurrence.span() for occurrence in re.finditer(towel, design)]
+            # if not positions:
+            #     break
+
+            # substrings = [(0, positions[0][0])] + [(x[1], y[0]) for x, y in pairwise(positions)]
+            # i = 0
+            # while not is_match and i < len(substrings):
+            #     is_match = match_design(towels, design[substrings[i][0]:substrings[i][1]])
+            #     i += 1
+
+            for position in positions:
+                is_match = self.match(design[:position[0]]) and self.match(design[position[1]:])
+                if is_match:
+                    return True
+
+        return is_match
+
+
+    def match_designs(self):
+        return [self.match_design(design) for design in self.designs]
+
+def day19():
+    data = [line.strip() for line in open('input19.txt')]
+    start_time = time.time()
+
+    towels = data[0].split(', ')
+    designs = data[2:]
+
+    designer = TowelDesignMatchingController(towels, designs)
+
+    matches = designer.match_designs()
+    task1 = sum(matches)
     task2 = None
 
     return time.time() - start_time, task1, task2
