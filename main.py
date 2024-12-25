@@ -47,7 +47,7 @@ if __name__ == '__main__':
     run_tests()
 
     day = str(date.today().day)
-    #day = "12"
+    #day = "23"
     try:
         run(eval("elftasks.day" + day))
     except AttributeError:

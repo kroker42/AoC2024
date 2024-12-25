@@ -9,6 +9,8 @@ from collections import Counter
 from itertools import pairwise
 from itertools import combinations
 
+from typing import Dict
+
 
 ##############
 def sum_min_distances(lists):
@@ -1212,7 +1214,10 @@ class TowelDesignMatchingController:
     def __init__(self, towels, designs):
         self.towels = towels
         self.designs = designs
-        self.matches = {}
+        self.matches = {towel: True for towel in self.towels}
+        self.design_catalogue = {towel: {tuple([towel])} for towel in towels}
+        self.counts = self.design_catalogue.copy()
+
 
     def match(self, design):
         if design not in self.matches:
@@ -1227,25 +1232,43 @@ class TowelDesignMatchingController:
 
         for towel in self.towels:
             positions = [occurrence.span() for occurrence in re.finditer(towel, design)]
-            # if not positions:
-            #     break
-
-            # substrings = [(0, positions[0][0])] + [(x[1], y[0]) for x, y in pairwise(positions)]
-            # i = 0
-            # while not is_match and i < len(substrings):
-            #     is_match = match_design(towels, design[substrings[i][0]:substrings[i][1]])
-            #     i += 1
-
             for position in positions:
-                is_match = self.match(design[:position[0]]) and self.match(design[position[1]:])
-                if is_match:
-                    return True
+                if self.match(design[:position[0]]) and self.match(design[position[1]:]):
+                    if design not in self.design_catalogue:
+                        self.design_catalogue[design] = set()
+                    towel_combo = [towel]
+                    if design[:position[0]]:
+                        towel_combo = [design[:position[0]]] + towel_combo
+                    if design[position[1]:]:
+                        towel_combo = towel_combo + [design[position[1]:]]
+
+                    self.design_catalogue[design].add(tuple(towel_combo)) # will break if len(towel_combo) < 2
+                    is_match = True
 
         return is_match
 
-
     def match_designs(self):
         return [self.match_design(design) for design in self.designs]
+
+    def expand(self, sub_design):
+        expanded = []
+        for str in sub_design:
+            if expanded == []:
+                expanded = self.expand_design(str)
+            else:
+                pass
+
+
+
+    def expand_design(self, design):
+        if design not in self.design_catalogue:
+            return
+
+        expanded = set()
+        for sub_design in self.design_catalogue[design]:
+            expanded.update(self.expand(sub_design))
+
+        return expanded
 
 def day19():
     data = [line.strip() for line in open('input19.txt')]
@@ -1258,6 +1281,236 @@ def day19():
 
     matches = designer.match_designs()
     task1 = sum(matches)
+
+    counts = [designer.count_designs(design) for design in designs]
+    task2 = sum(counts)
+
+    return time.time() - start_time, task1, task2
+    
+
+##############
+
+"""964A
+246A
+973A
+682A
+180A"""
+
+class DoorKeypad:
+    def __init__(self):
+        self.keypad = [[7, 8, 9], [4, 5, 6], [1, 2, 3], [None, 0, 'A']]
+        self.paths = {(0, 2): [[('^', 1)]],
+                      (0, 'A'): [[('>', 1)]],
+                      (1, 7): [[('^', 2)]],
+                      (1, 8): [[('^', 2), ('>', 1)], [('>', 1), ('^', 2)]],
+                      (2, 4): [[('<', 1), ('^', 1)], [('^', 1), ('<', 1)]],
+                      (2, 9): [[('^', 3), ('>', 1)], [('>', 1), ('^', 3)]],
+                      (2, 'A'): [[('>', 1), ('v', 1)], [('v', 1), ('>', 1)]],
+                      (3, 'A'): [[('v', 1)]],
+                      (3, 7): [[('<', 2), ('^', 2)], [('^', 2), ('<', 2)]],
+                      (4, 5): [[('>', 1)]],
+                      (4, 6): [[('>', 2)]],
+                      (4, 'A'): [[('>', 2), ('v', 2)], [('v', 1), ('>', 2), ('v', 1)]],
+                      (5, 6): [[('>', 1)]],
+                      (6, 4): [[('<', 2)]],
+                      (6, 8): [[('<', 1), ('^', 1)], [('^', 1), ('<', 1)]],
+                      (6, 'A'): [[('v', 2)]],
+                      (7, 3): [[('>', 2), ('v', 2)], [('v', 2), ('>', 2)]],
+                      (7, 9): [[('>', 2)]],
+                      (8, 0): [[('v', 3)]],
+                      (8, 2): [[('v', 2)]],
+                      (9, 7): [[('<', 2)]],
+                      (9, 'A'): [[('v', 3)]],
+                      (9, 8): [[('<', 1)]],
+                      (9, 6): [[('v', 1)]]}
+
+class RobotKeypad:
+    def __init__(self):
+        self.keypad = [[None, '^', 'A'], ['<', 'v', '>']]
+        self.paths = {('<', '^'): [[('>', 1), ('^', 1)]],
+                      ('<', 'A'): [[('>', 2), ('^', 1)]],
+                      ('^', '<'): [[('v', 1), ('<', 1)]],
+                      ('A', '<'): [[('v', 1), ('<', 2)]]
+                      }
+        self.directions = {(-1, 0): '^',
+                           (1, 0): 'v',
+                           (0, -1): '<',
+                           (0, 1): '>'}
+
+    def get_paths(self, key1, key2):
+        if (key1, key2) in self.paths:
+            return self.paths[(key1, key2)]
+        else:
+            None
+
+
+def day21():
+    data = [line.strip().split() for line in open('input21.txt')]
+    start_time = time.time()
+
+    task1 = None
+    task2 = None
+
+    return time.time() - start_time, task1, task2
+    
+
+##############
+def add_connection(connections, x, y):
+    if x not in connections:
+        connections[x] = [y]
+    else:
+        connections[x].append(y)
+
+def create_lan(lan_pairs):
+    connections = {}
+    for pair in lan_pairs:
+        add_connection(connections, *pair)
+        add_connection(connections, *reversed(pair))
+    return connections
+
+def is_connected(lan, x, y):
+    return y in lan[x]
+
+def find_rings(lan):
+    # rings = set()
+    # for pc in lan:
+    #     rings.update([tuple(sorted([pc, *pair])) for pair in combinations(lan[pc], 2) if is_connected(lan, *pair)])
+    #    return rings
+
+    return {tuple(sorted([pc, *pair])) for pc in lan for pair in combinations(lan[pc], 2) if is_connected(lan, *pair)}
+
+def contains_t(ring):
+    return sum([s.startswith('t') for s in ring])
+
+def day23():
+    data = [line.strip().split('-') for line in open('input23.txt')]
+    start_time = time.time()
+    rings = find_rings(create_lan(data))
+    print(rings)
+
+    t_rings = [ring for ring in rings if contains_t(ring)]
+    task1 = len(t_rings)
+    task2 = None
+
+    return time.time() - start_time, task1, task2
+    
+
+##############
+
+def parse_wires(wires):
+    return {w[0]: int(w[1]) for w in [w.split(': ') for w in wires]}
+
+"""x00 AND y00 -> z00
+x01 XOR y01 -> z01
+x02 OR y02 -> z02"""
+def parse_gates(gates):
+    return [(x[0].split(' '), x[1]) for x in [x.split(" -> ") for x in gates]]
+
+"""(['x01', 'XOR', 'y01'], 'z01')"""
+def run_gate(gate, wires):
+    if gate[0][0] not in wires or gate[0][2] not in wires:
+        return gate
+
+    ops = {'AND': operator.and_, 'OR': operator.or_, 'XOR': operator.xor}
+
+    wires[gate[1]] = ops[gate[0][1]](wires[gate[0][0]], wires[gate[0][2]])
+
+
+def day24():
+    data = [line.strip() for line in open('input24.txt')]
+    start_time = time.time()
+
+    separator = data.index('')
+    wires = parse_wires(data[:separator])
+    gates = parse_gates(data[separator + 1:])
+
+    reruns = []
+    for gate in gates:
+        rerun = run_gate(gate, wires)
+        if rerun:
+            reruns.append(rerun)
+
+    while reruns:
+        new_gates = reruns.copy()
+        reruns = []
+        for gate in new_gates:
+            rerun = run_gate(gate, wires)
+            if rerun:
+                reruns.append(rerun)
+
+    z_wires = [item for item in wires.items() if item[0].startswith('z')]
+    bin_num = "".join([str(z[1]) for z in reversed(sorted(z_wires))])
+
+    task1 = int(bin_num, base=2)
+    task2 = None
+
+    return time.time() - start_time, task1, task2
+    
+
+##############
+
+def parse_pins(schematic):
+    heights = []
+    for col in range(len(schematic[0])):
+        heights.append(0)
+        for row in range(len(schematic)):
+            heights[-1] += schematic[row][col] == '#'
+
+    return heights
+
+"""key:
+#####
+##.##
+.#.##
+...##
+...#.
+...#.
+.....
+lock:
+.....
+#....
+#....
+#...#
+#.#.#
+#.###
+#####"""
+def parse_lock_keys(schematics):
+    locks = []
+    keys = []
+
+    start = 0
+    try:
+        while True:
+            end = schematics.index('', start) # throws ValueError at end
+            if schematics[start][0] == '#':
+                locks.append(parse_pins(schematics[start + 1:end]))
+            else:
+                keys.append(parse_pins(schematics[start:end - 1]))
+            start = end + 1
+    except ValueError:
+        if schematics[start][0] == '#':
+            locks.append(parse_pins(schematics[start + 1:]))
+        else:
+            print(start)
+            keys.append(parse_pins(schematics[start:-1]))
+
+    return locks, keys
+
+def key_fits_lock(key, lock):
+    for pin in zip(key, lock):
+        if operator.add(*pin) > 5:
+            return False
+
+    return True
+
+def day25():
+    data = [line.strip() for line in open('input25.txt')]
+    start_time = time.time()
+
+    locks, keys = parse_lock_keys(data)
+    fits = [key_fits_lock(key, lock) for key in keys for lock in locks]
+
+    task1 = sum(fits)
     task2 = None
 
     return time.time() - start_time, task1, task2

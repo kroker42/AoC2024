@@ -600,3 +600,148 @@ bbrgwb""".split('\n')
         designer = elftasks.TowelDesignMatchingController(self.towels, self.designs)
         matches = designer.match_designs()
         self.assertEqual(6, sum(matches))
+
+    def test_task2(self):
+        designer = elftasks.TowelDesignMatchingController(self.towels, self.designs)
+        matches = designer.match_designs()
+#        print(designer.design_catalogue[self.designs[0]])
+#        self.assertEqual(2, designer.count_designs(self.designs[0]))
+#        counts = [designer.count_designs(design) for design in self.designs]
+#        self.assertEqual(16, sum(counts))
+
+
+###############
+
+
+class TestDay21(unittest.TestCase):
+    data = """""".split('\n')
+    def test_task1(self):
+        self.assertEqual(False, False)
+
+###############
+
+
+class TestDay23(unittest.TestCase):
+    data = [x.split('-') for x in """kh-tc
+qp-kh
+de-cg
+ka-co
+yn-aq
+qp-ub
+cg-tb
+vc-aq
+tb-ka
+wh-tc
+yn-cg
+kh-ub
+ta-co
+de-co
+tc-td
+tb-wq
+wh-td
+ta-ka
+td-qp
+aq-cg
+wq-ub
+ub-vc
+de-ta
+wq-aq
+wq-vc
+wh-yn
+ka-de
+kh-ta
+co-tc
+wh-qp
+tb-vc
+td-yn""".split('\n')]
+    def test_task1(self):
+        expected = set([tuple(sorted(x.split(','))) for x in """aq,cg,yn
+aq,vc,wq
+co,de,ka
+co,de,ta
+co,ka,ta
+de,ka,ta
+kh,qp,ub
+qp,td,wh
+tb,vc,wq
+tc,td,wh
+td,wh,yn
+ub,vc,wq""".split('\n')])
+
+        rings = elftasks.find_rings(elftasks.create_lan(self.data))
+        self.assertEqual(12, len(rings))
+        self.assertEqual(expected, rings)
+###############
+
+
+class TestDay24(unittest.TestCase):
+    wires = """x00: 1
+x01: 1
+x02: 1
+y00: 0
+y01: 1
+y02: 0""".split('\n')
+
+    gates = """x00 AND y00 -> z00
+x01 XOR y01 -> z01
+x02 OR y02 -> z02""".split('\n')
+
+    def test_task1(self):
+        wires = elftasks.parse_wires(self.wires)
+        self.assertEqual({'x00': 1, 'x01': 1, 'x02': 1, 'y00': 0, 'y01': 1, 'y02': 0}, wires)
+        self.assertEqual([(['x00', 'AND', 'y00'], 'z00'), (['x01', 'XOR', 'y01'], 'z01'), (['x02', 'OR', 'y02'], 'z02')], elftasks.parse_gates(self.gates))
+
+        for gate in elftasks.parse_gates(self.gates):
+            elftasks.run_gate(gate, wires)
+        self.assertEqual(0, wires['z00'])
+        self.assertEqual(0, wires['z01'])
+        self.assertEqual(1, wires['z02'])
+
+###############
+
+
+class TestDay25(unittest.TestCase):
+    data = """#####
+.####
+.####
+.####
+.#.#.
+.#...
+.....
+
+#####
+##.##
+.#.##
+...##
+...#.
+...#.
+.....
+
+.....
+#....
+#....
+#...#
+#.#.#
+#.###
+#####
+
+.....
+.....
+#.#..
+###..
+###.#
+###.#
+#####
+
+.....
+.....
+.....
+#....
+#.#..
+#.#.#
+#####""".split('\n')
+    def test_task1(self):
+        locks, keys = elftasks.parse_lock_keys(self.data)
+        print(locks, keys)
+        self.assertEqual([0, 5, 3, 4, 3], locks[0])
+        self.assertEqual([5, 0, 2, 1, 3], locks[0])
