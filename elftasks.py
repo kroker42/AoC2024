@@ -1357,9 +1357,9 @@ def day21():
 ##############
 def add_connection(connections, x, y):
     if x not in connections:
-        connections[x] = [y]
+        connections[x] = {y}
     else:
-        connections[x].append(y)
+        connections[x].add(y)
 
 def create_lan(lan_pairs):
     connections = {}
@@ -1371,26 +1371,41 @@ def create_lan(lan_pairs):
 def is_connected(lan, x, y):
     return y in lan[x]
 
-def find_rings(lan):
+def find_triangles(lan):
     # rings = set()
     # for pc in lan:
     #     rings.update([tuple(sorted([pc, *pair])) for pair in combinations(lan[pc], 2) if is_connected(lan, *pair)])
     #    return rings
-
     return {tuple(sorted([pc, *pair])) for pc in lan for pair in combinations(lan[pc], 2) if is_connected(lan, *pair)}
 
 def contains_t(ring):
     return sum([s.startswith('t') for s in ring])
 
+def find_largest_ring(lan):
+    rings = set()
+    for pc in lan:
+        ring = [pc]
+        for connection in lan[pc]:
+            connections = [connection == x or is_connected(lan, connection, x) for x in ring]
+            if np.all(connections):
+                ring.append(connection)
+        rings.add(frozenset(ring))
+
+    return max(rings, key=lambda ring: len(ring))
+
+
 def day23():
     data = [line.strip().split('-') for line in open('input23.txt')]
     start_time = time.time()
-    rings = find_rings(create_lan(data))
-    print(rings)
 
-    t_rings = [ring for ring in rings if contains_t(ring)]
+    lan = create_lan(data)
+    triangles = find_triangles(lan)
+
+    t_rings = [ring for ring in triangles if contains_t(ring)]
     task1 = len(t_rings)
-    task2 = None
+
+    largest_ring = list(find_largest_ring(lan))
+    task2 = ",".join(sorted(largest_ring))
 
     return time.time() - start_time, task1, task2
     
@@ -1491,7 +1506,6 @@ def parse_lock_keys(schematics):
         if schematics[start][0] == '#':
             locks.append(parse_pins(schematics[start + 1:]))
         else:
-            print(start)
             keys.append(parse_pins(schematics[start:-1]))
 
     return locks, keys

@@ -668,9 +668,17 @@ tc,td,wh
 td,wh,yn
 ub,vc,wq""".split('\n')])
 
-        rings = elftasks.find_rings(elftasks.create_lan(self.data))
+        rings = elftasks.find_triangles(elftasks.create_lan(self.data))
         self.assertEqual(12, len(rings))
         self.assertEqual(expected, rings)
+
+    def test_task2(self):
+        expected = frozenset("co,de,ka,ta".split(','))
+        lan = elftasks.create_lan(self.data)
+        ring = elftasks.find_largest_ring(lan)
+        self.assertEqual(4, len(ring))
+        self.assertEqual(expected, ring)
+
 ###############
 
 
@@ -742,6 +750,5 @@ class TestDay25(unittest.TestCase):
 #####""".split('\n')
     def test_task1(self):
         locks, keys = elftasks.parse_lock_keys(self.data)
-        print(locks, keys)
         self.assertEqual([0, 5, 3, 4, 3], locks[0])
-        self.assertEqual([5, 0, 2, 1, 3], locks[0])
+        self.assertEqual([5, 0, 2, 1, 3], keys[0])
