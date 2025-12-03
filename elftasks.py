@@ -112,7 +112,7 @@ def day2():
 
 ##############
 
-def findHighestJoltage(bank):
+def findHighestJoltageOld(bank):
     joltage1 = "1"
     joltage2 = bank[-1]
     for j in reversed(bank[:-1]):
@@ -141,11 +141,12 @@ def findHighestJoltageChain(bank, n = 12):
 
     return int("".join(joltage))
 
+def findHighestJoltage(bank):
+    return findHighestJoltageChain(bank, 2)
+
 
 def day3():
-    data = [line.strip() for line in open('input3.txt')]
- #   banks = [[int(x) for x in line] for line in data]
-    banks = data
+    banks = [line.strip() for line in open('input3.txt')]
 
     start_time = time.time()
 

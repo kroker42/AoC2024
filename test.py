@@ -38,10 +38,10 @@ class TestDay3(unittest.TestCase):
     def test_task1(self):
 #        banks = [[int(x) for x in line] for line in self.data]
         banks = self.data
-        self.assertEqual("98", elftasks.findHighestJoltage(banks[0]))
-        self.assertEqual("89", elftasks.findHighestJoltage(banks[1]))
-        self.assertEqual("78", elftasks.findHighestJoltage(banks[2]))
-        self.assertEqual("92", elftasks.findHighestJoltage(banks[3]))
+        self.assertEqual(int("98"), elftasks.findHighestJoltage(banks[0]))
+        self.assertEqual(int("89"), elftasks.findHighestJoltage(banks[1]))
+        self.assertEqual(int("78"), elftasks.findHighestJoltage(banks[2]))
+        self.assertEqual(int("92"), elftasks.findHighestJoltage(banks[3]))
 
 
     def test_task2(self):
