@@ -46,7 +46,7 @@ class TestDay3(unittest.TestCase):
 
     def test_task2(self):
         banks = self.data
-#        self.assertEqual(987654321111, elftasks.findHighestJoltageChain(banks[0]))
-#        self.assertEqual(811111111119, elftasks.findHighestJoltageChain(banks[1]))
-#        self.assertEqual(434234234278, elftasks.findHighestJoltageChain(banks[2]))
+        self.assertEqual(987654321111, elftasks.findHighestJoltageChain(banks[0]))
+        self.assertEqual(811111111119, elftasks.findHighestJoltageChain(banks[1]))
+        self.assertEqual(434234234278, elftasks.findHighestJoltageChain(banks[2]))
         self.assertEqual(888911112111, elftasks.findHighestJoltageChain(banks[3]))

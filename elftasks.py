@@ -150,7 +150,7 @@ def day3():
 
     start_time = time.time()
 
-    joltages = [int(findHighestJoltage(bank)) for bank in banks]
+    joltages = [findHighestJoltage(bank) for bank in banks]
     task1 = sum(joltages)
 
     joltages = [findHighestJoltageChain(bank) for bank in banks]
