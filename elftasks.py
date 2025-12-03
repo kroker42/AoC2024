@@ -109,3 +109,51 @@ def day2():
 
     return time.time() - start_time, task1, task2
     
+
+##############
+
+def findHighestJoltage(bank):
+    joltage1 = "1"
+    joltage2 = bank[-1]
+    for j in reversed(bank[:-1]):
+        if j >= joltage1:
+            joltage2 = max(joltage1, joltage2)
+            joltage1 = j
+
+    return joltage1 + joltage2
+
+def findHighestJoltageChain(bank, n = 12):
+    joltage = list(bank[len(bank) - n:])
+    indices = list(range(len(bank) - n, len(bank)))
+
+    for i in reversed(range(0, len(bank) - n + 1)):
+        if bank[i] >= joltage[0]:
+            joltage[0] = bank[i]
+            indices[0] = i
+
+    for i in range(1, n):
+        if indices[i - 1] + 1 >= indices[i]:
+            break
+        for j in reversed(range(indices[i - 1] + 1, len(bank) - n + 1 + i)):
+            if bank[j] >= joltage[i]:
+                joltage[i] = bank[j]
+                indices[i] = j
+
+    return int("".join(joltage))
+
+
+def day3():
+    data = [line.strip() for line in open('input3.txt')]
+ #   banks = [[int(x) for x in line] for line in data]
+    banks = data
+
+    start_time = time.time()
+
+    joltages = [int(findHighestJoltage(bank)) for bank in banks]
+    task1 = sum(joltages)
+
+    joltages = [findHighestJoltageChain(bank) for bank in banks]
+    task2 = sum(joltages)
+
+    return time.time() - start_time, task1, task2
+    
