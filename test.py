@@ -50,3 +50,31 @@ class TestDay3(unittest.TestCase):
         self.assertEqual(811111111119, elftasks.findHighestJoltageChain(banks[1]))
         self.assertEqual(434234234278, elftasks.findHighestJoltageChain(banks[2]))
         self.assertEqual(888911112111, elftasks.findHighestJoltageChain(banks[3]))
+
+###############
+
+
+class TestDay4(unittest.TestCase):
+    data = """..@@.@@@@.
+@@@.@.@.@@
+@@@@@.@.@@
+@.@@@@..@.
+@@.@@@@.@@
+.@@@@@@@.@
+.@.@.@.@@@
+@.@@@.@@@@
+.@@@@@@@@.
+@.@.@@@.@.""".split('\n')
+    def test_task1(self):
+        self.assertEqual(13, elftasks.forkliftable(self.data))
+
+    def test_task2(self):
+        rolls = elftasks.map_rolls(self.data)
+
+        total_lifted = 0
+        lifted = 1
+        while lifted:
+            lifted = elftasks.forklift(rolls)
+            total_lifted += lifted
+
+        self.assertEqual(43, total_lifted)

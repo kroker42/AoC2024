@@ -158,3 +158,90 @@ def day3():
 
     return time.time() - start_time, task1, task2
     
+
+##############
+
+def neighbour_roll_count(r, c, roll_map):
+    directions = (-1, 0, 1)
+    neighbour_count = 0
+
+    for rdir in directions:
+        rnbour = r + rdir
+        if rnbour in range(len(roll_map)):
+            for cdir in directions:
+                cnbour = c + cdir
+                if cnbour in range(len(roll_map[0])) and roll_map[rnbour][cnbour] == '@':
+                    neighbour_count += 1
+
+    return neighbour_count - 1 # remove the roll itself
+
+
+def forkliftable(roll_map):
+    roll_count = 0
+    for r in range(len(roll_map)):
+        for c in range(len(roll_map[0])):
+            if roll_map[r][c] == '@':
+                if neighbour_roll_count(r, c, roll_map) < 4:
+                    roll_count += 1
+
+    return roll_count
+
+def neighbours(r, c, roll_map):
+    directions = (-1, 0, 1)
+    neighbours = set()
+
+    for rdir in directions:
+        rnbour = r + rdir
+        if rnbour in range(len(roll_map)):
+            for cdir in directions:
+                cnbour = c + cdir
+                if cnbour in range(len(roll_map[0])) and roll_map[rnbour][cnbour] == '@':
+                    neighbours.add((rnbour, cnbour))
+
+    return neighbours # includes the roll itself: (r,c)
+
+def map_rolls(roll_map):
+    rolls = {}
+
+    for r in range(len(roll_map)):
+        for c in range(len(roll_map[0])):
+            if roll_map[r][c] == '@':
+                rolls[(r, c)] = neighbours(r, c, roll_map)
+
+    return rolls
+
+def forklift(rolls):
+    liftable = []
+    for roll in rolls:
+        if len(rolls[roll]) < 5:
+            for n in rolls[roll]:
+                if n != roll:
+                    rolls[n].discard(roll)
+            liftable.append(roll)
+
+    for r in liftable:
+        del rolls[r]
+
+    return len(liftable)
+
+
+
+
+def day4():
+    data = [line.strip() for line in open('input4.txt')]
+    start_time = time.time()
+
+    task1 = forkliftable(data)
+
+    rolls = map_rolls(data)
+
+    total_lifted = 0
+    lifted = 1
+    while lifted:
+        lifted = forklift(rolls)
+        total_lifted += lifted
+
+    task2 = total_lifted
+
+    return time.time() - start_time, task1, task2
+    
