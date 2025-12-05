@@ -73,8 +73,35 @@ class TestDay4(unittest.TestCase):
 
         total_lifted = 0
         lifted = 1
-        while lifted:
+        while lifted > 0:
             lifted = elftasks.forklift(rolls)
             total_lifted += lifted
 
         self.assertEqual(43, total_lifted)
+
+
+###############
+
+
+class TestDay5(unittest.TestCase):
+    data = """3-7
+10-14
+16-20
+12-18
+6-6
+3-5
+2-2
+
+1
+5
+8
+11
+17
+32""".split('\n')
+    def test_task2(self):
+        ranges = elftasks.get_ingredient_ranges(self.data)
+        self.assertEqual(16, elftasks.merge_ranges(ranges)) # wrong answer
+
+    def test_merge2(self):
+        ranges = elftasks.get_ingredient_ranges(self.data)
+        self.assertEqual(17, elftasks.merge_ranges2(ranges))

@@ -234,10 +234,9 @@ def day4():
     task1 = forkliftable(data)
 
     rolls = map_rolls(data)
-
     total_lifted = 0
     lifted = 1
-    while lifted:
+    while lifted > 0:
         lifted = forklift(rolls)
         total_lifted += lifted
 
@@ -245,3 +244,66 @@ def day4():
 
     return time.time() - start_time, task1, task2
     
+
+##############
+
+def get_ingredient_ranges(inventory):
+    ranges = []
+    for line in inventory:
+        if not line:
+            break
+        start, stop = line.split('-')
+        ranges.append(range(int(start), int(stop) + 1))
+
+    return ranges
+
+def merge_ranges(ranges):
+    fresh_dict = {r.start : r.stop - 1 for r in ranges}
+    starts = sorted(list(fresh_dict.keys()))
+
+    mega_ranges = [(starts[0], fresh_dict[starts[0]])]
+    for start in starts[1:]:
+        if start <= mega_ranges[-1][1]:
+            ids = mega_ranges.pop(-1)
+            mega_ranges.append((ids[0], max(fresh_dict[start], ids[1])))
+        else:
+            mega_ranges.append((start, fresh_dict[start]))
+
+    count_ids = 0
+    for r in mega_ranges:
+        count_ids += r[1] - r[0] + 1
+    return count_ids
+
+def merge_ranges2(ranges):
+    ranges.sort(key = lambda r: (r.start, r.stop))
+    merged = [ranges[0]]
+    for r in ranges[1:]:
+        if r.start <= merged[-1].stop:
+            old = merged.pop(-1)
+            merged.append(range(old.start, max(old.stop, r.stop)))
+        else:
+            merged.append(r)
+    return sum([len(r) for r in merged])
+
+def day5():
+    data = [line.strip() for line in open('input5.txt')]
+
+    inventory_ranges = get_ingredient_ranges(data)
+    ingredients = [int(x) for x in data[len(inventory_ranges) + 1:]]
+
+    start_time = time.time()
+
+    count_fresh = 0
+    for ingredient in ingredients:
+        for fresh_ids in inventory_ranges:
+            if ingredient in fresh_ids:
+                count_fresh += 1
+                break
+
+    task1 = count_fresh
+
+    task2 = merge_ranges2(inventory_ranges)
+
+    return time.time() - start_time, task1, task2
+    
+
