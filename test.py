@@ -120,7 +120,7 @@ class TestDay6(unittest.TestCase):
         numbers = elftasks.str2int(worksheet[:-1])
         ops = self.data[-1].split()
 
-        self.assertEqual([33210, 490, 4243455, 401], elftasks.octo_maths(numbers, ops))
+        self.assertEqual([33210, 490, 4243455, 401], elftasks.octo_maths(np.array(numbers).T, ops))
 
     def test_task2(self):
         worksheet = self.data[:-1]
