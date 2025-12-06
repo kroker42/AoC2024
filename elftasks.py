@@ -307,3 +307,61 @@ def day5():
     return time.time() - start_time, task1, task2
     
 
+
+
+##############
+
+def octo_maths(numbers, ops):
+    num_array = np.array(numbers)
+
+    results = []
+    for i in range(len(ops)):
+        results.append(list(itertools.accumulate(num_array.T[i], operator.add if ops[i] == '+' else operator.mul))[-1])
+
+    return results
+
+def r2l_octo_maths(numbers, ops):
+    r2l_worksheet = []
+
+    arguments = []
+    for c in range(len(numbers[0])):
+        num = []
+        for row in numbers:
+            if row[c] != ' ':
+                num.append(row[c])
+
+        if num:
+            arguments.append(''.join(num))
+        else:
+            r2l_worksheet.append(arguments)
+            arguments = []
+
+    r2l_worksheet.append(arguments)
+    r2l_worksheet = str2int(r2l_worksheet)
+    results = []
+    for i in range(len(ops)):
+        results.append(list(itertools.accumulate(r2l_worksheet[i], operator.add if ops[i] == '+' else operator.mul))[-1])
+
+    return results
+
+def str2int(array):
+    return [[int(x) for x in row] for row in array]
+
+
+def day6():
+    data = [line.strip().split() for line in open('input6.txt')]
+    numbers = str2int(data[:-1])
+    ops = data[-1]
+
+    start_time = time.time()
+
+    task1 = sum(octo_maths(numbers, ops))
+
+    data = [line.strip() for line in open('input6.txt')]
+
+    for r in data[:-1]:
+        print(r)
+    task2 = sum(r2l_octo_maths(data[:-1], ops))
+
+    return time.time() - start_time, task1, task2
+    

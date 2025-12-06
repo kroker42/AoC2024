@@ -105,3 +105,26 @@ class TestDay5(unittest.TestCase):
     def test_merge2(self):
         ranges = elftasks.get_ingredient_ranges(self.data)
         self.assertEqual(17, elftasks.merge_ranges2(ranges))
+
+
+###############
+
+
+class TestDay6(unittest.TestCase):
+    data = """123 328  51 64 
+ 45 64  387 23 
+  6 98  215 314
+*   +   *   + """.split('\n')
+    def test_task1(self):
+        worksheet = [line.split() for line in self.data]
+        numbers = elftasks.str2int(worksheet[:-1])
+        ops = self.data[-1].split()
+
+        self.assertEqual([33210, 490, 4243455, 401], elftasks.octo_maths(numbers, ops))
+
+    def test_task2(self):
+        worksheet = self.data[:-1]
+        ops = self.data[-1].split()
+
+        self.assertEqual([8544, 625, 3253600, 1058], elftasks.r2l_octo_maths(worksheet, ops))
+
