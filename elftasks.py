@@ -356,3 +356,67 @@ def day6():
 
     return time.time() - start_time, task1, task2
     
+
+
+##############
+
+def dimensions(canvas):
+    return len(canvas), len(canvas[0])
+
+def split_beam(row, col, no_cols):
+    beams = set()
+    if col - 1 >= 0:
+        beams.add(col - 1)
+
+    if col + 1 < no_cols:
+        beams.add(col + 1)
+
+    return beams
+
+def paint_by_numbers(canvas):
+    rows, cols = dimensions(canvas)
+
+    beams = {i: set() for i in range(rows)}
+    beams[0] = {canvas[0].index('S')}
+    splitters = set()
+
+    for row in range(rows - 1):
+        for col in beams[row]:
+            if canvas[row][col] == '^':
+                splitters.add((row, col))
+                beams[row + 1].update(split_beam(row + 1, col, cols))
+            else:
+                beams[row + 1].add(col)
+
+    return beams, splitters
+
+def quantum_paint_by_numbers(canvas):
+    rows, cols = dimensions(canvas)
+
+    beams = {i: dict() for i in range(rows)}
+    beams[0] = {canvas[0].index('S'): 1}
+
+    for row in range(rows - 1):
+        for col in beams[row]:
+            new_cols = split_beam(row + 1, col, cols) if canvas[row][col] == '^' else [col]
+
+            for c in new_cols:
+                if c not in beams[row + 1]:
+                    beams[row + 1][c] = 0
+                beams[row + 1][c] += beams[row][col]
+
+    return beams
+
+
+def day7():
+    canvas = [line.strip() for line in open('input7.txt')]
+    start_time = time.time()
+
+    beams, splitters = paint_by_numbers(canvas)
+    task1 = len(splitters)
+
+    beams = quantum_paint_by_numbers(canvas)
+    task2 = sum(beams[len(beams) - 1].values())
+
+    return time.time() - start_time, task1, task2
+    
