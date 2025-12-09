@@ -3,6 +3,7 @@ import time
 import math
 import operator
 import itertools
+import functools
 
 import numpy as np
 from collections import Counter
@@ -417,6 +418,73 @@ def day7():
 
     beams = quantum_paint_by_numbers(canvas)
     task2 = sum(beams[len(beams) - 1].values())
+
+    return time.time() - start_time, task1, task2
+    
+
+##############
+
+def brute_force_distances(points):
+    distances = {}
+    for p in points:
+        for q in points:
+            d = int(math.dist(p, q))
+            if d not in distances:
+                distances[d] = []
+            distances[d].append((tuple([int(x) for x in p]), tuple([int(x) for x in q])))
+
+    distances.pop(0)
+    return distances
+
+def find_clusters(distances, no_pairs):
+    clusters = []
+    found_distances = 0
+    for bucket in sorted(distances):
+        if found_distances >= no_pairs:
+#            print(found_distances)
+            break
+
+#        print(found_distances, bucket)
+
+        for p, q in distances[bucket]:
+            found = False
+            for cluster in clusters:
+                if p in cluster:
+                    if q not in cluster:
+                        cluster[p].add(q)
+                        cluster[q] = {p}
+                        found_distances += 1
+                    elif q not in cluster[p]:
+                        cluster[p].add(q)
+                        cluster[q].add(p)
+                    found = True
+                    break
+                elif q in cluster:
+                    cluster[p] = {q}
+                    cluster[q].add(p)
+                    found_distances += 1
+                    found = True
+                    break
+            if not found:
+                clusters.append({p: {q}, q:{p}})
+                found_distances += 1
+
+    return clusters
+
+def day8():
+    data = [line.strip() for line in open('input8.txt')]
+    start_time = time.time()
+
+    points = [[int(x) for x in line.split(',')] for line in data]
+    points.sort()
+    points = np.array(points)
+
+    distances = brute_force_distances(points)
+    clusters = find_clusters(distances, 1000)
+    cluster_sizes = list(sorted([len(c) for c in clusters], reverse=True))
+
+    task1 = functools.reduce(operator.mul, cluster_sizes[0:3])
+    task2 = None
 
     return time.time() - start_time, task1, task2
     

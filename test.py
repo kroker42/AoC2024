@@ -1,4 +1,8 @@
 import unittest
+
+import functools
+import operator
+
 import elftasks
 import numpy as np
 
@@ -158,20 +162,42 @@ class TestDay7(unittest.TestCase):
         beams = elftasks.quantum_paint_by_numbers(self.data)
         self.assertEqual(40, sum(beams[len(beams) - 1].values()))
 
-"""
-.......S.......
-.......|.......
-......1^1......
-......|.|......
-......|.|......
-.....1.2.1.....
-.....1.2.1.....
-....1.121.1....
-...1^2^311^1...
-...|.2.3||.|...
-..1^3^232^2^1..
-..!.3.232.2.|..
-.1^132^52.21^1.
-.1.132.52.2|.|.
-.^.^.^.^.^...^.
-1.2.6.7.7.211.1"""
+
+###############
+
+
+class TestDay8(unittest.TestCase):
+    data = """162,817,812
+57,618,57
+906,360,560
+592,479,940
+352,342,300
+466,668,158
+542,29,236
+431,825,988
+739,650,466
+52,470,668
+216,146,977
+819,987,18
+117,168,530
+805,96,715
+346,949,466
+970,615,88
+941,993,340
+862,61,35
+984,92,344
+425,690,689""".split('\n')
+    def test_task1(self):
+        points = [[int(x) for x in line.split(',')] for line in self.data]
+        points.sort()
+        points = np.array(points)
+
+        distances = elftasks.brute_force_distances(points)
+#        print(len(distances))
+#        for key in sorted(distances):
+#            print(key, distances[key])
+
+        clusters = elftasks.find_clusters(distances, 10)
+
+        cluster_sizes = list(sorted([len(c) for c in clusters], reverse=True))
+        self.assertEqual(40, functools.reduce(operator.mul, cluster_sizes[0:3]))
