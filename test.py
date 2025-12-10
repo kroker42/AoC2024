@@ -1,5 +1,6 @@
 import unittest
 
+import itertools
 import functools
 import operator
 
@@ -201,3 +202,23 @@ class TestDay8(unittest.TestCase):
 
         cluster_sizes = list(sorted([len(c) for c in clusters], reverse=True))
         self.assertEqual(40, functools.reduce(operator.mul, cluster_sizes[0:3]))
+
+###############
+
+
+class TestDay9(unittest.TestCase):
+    data = """7,1
+11,1
+11,7
+9,7
+9,5
+2,5
+2,3
+7,3""".split('\n')
+    tiles = [tuple([int(x) for x in tile.split(',')]) for tile in data]
+
+    def test_task1(self):
+        self.assertEqual(50, max(elftasks.squarea(self.tiles)))
+
+    def test_task2(self):
+        pairs = itertools.combinations(self.tiles, 2)

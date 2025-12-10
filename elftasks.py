@@ -488,3 +488,34 @@ def day8():
 
     return time.time() - start_time, task1, task2
     
+
+##############
+
+def squarea(tiles):
+    pairs = itertools.combinations(tiles, 2)
+    return [abs(p[0] - q[0] + 1) * abs(p[1] - q[1] + 1) for p, q in pairs]
+
+def tile_loop(tiles):
+    loop = {tiles[0]: [tiles[-1]]}
+
+    for i in range(tiles[:-1]):
+        loop[tiles[i]].append(tiles[i + 1])
+        loop[tiles[i+1]] = [tiles[i]]
+
+    loop[tiles[-1]].append(tiles[0])
+
+    return loop
+
+
+
+def day9():
+    data = [line.strip() for line in open('input9.txt')]
+    tiles = [tuple([int(x) for x in tile.split(',')]) for tile in data]
+
+    start_time = time.time()
+
+    task1 = max(squarea(tiles))
+    task2 = None
+
+    return time.time() - start_time, task1, task2
+    
