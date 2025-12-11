@@ -222,3 +222,60 @@ class TestDay9(unittest.TestCase):
 
     def test_task2(self):
         pairs = itertools.combinations(self.tiles, 2)
+
+
+###############
+
+
+class TestDay10(unittest.TestCase):
+    data = """[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
+[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}
+[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}""".split('\n')
+    def test_task1(self):
+        machines = elftasks.parse_factory_machines([line.split(' ') for line in self.data])
+        self.assertEqual(['.##.', [[3], [1,3], [2], [2,3], [0,2], [0,1]], '{3,5,4,7}'], machines[0])
+
+###############
+
+
+class TestDay11(unittest.TestCase):
+    data = """aaa: you hhh
+you: bbb ccc
+bbb: ddd eee
+ccc: ddd eee fff
+ddd: ggg
+eee: out
+fff: out
+ggg: out
+hhh: ccc fff iii
+iii: out""".split('\n')
+    def test_task1(self):
+        devices = [line.split(' ') for line in self.data]
+        graph = elftasks.build_device_graph(devices)
+        self.assertEqual(["bbb", "ccc"], graph["you"])
+        self.assertEqual(["out"], graph["fff"])
+
+        paths = elftasks.Paths(graph)
+        self.assertEqual(5, paths.count_paths("you"))
+
+    def test_task2(self):
+        data = """svr: aaa bbb
+aaa: fft
+fft: ccc
+bbb: tty
+tty: ccc
+ccc: ddd eee
+ddd: hub
+hub: fff
+eee: dac
+dac: fff
+fff: ggg hhh
+ggg: out
+hhh: out""".split('\n')
+        devices = [line.split(' ') for line in data]
+        graph = elftasks.build_device_graph(devices)
+
+        paths = elftasks.Paths(graph)
+        self.assertEqual(2, paths.count_dac_fft_paths("svr"))
+
+

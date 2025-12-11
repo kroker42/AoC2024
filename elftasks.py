@@ -519,3 +519,98 @@ def day9():
 
     return time.time() - start_time, task1, task2
     
+
+##############
+
+def parse_buttons(button_schematic):
+#    print(button_schematic)
+
+    buttons = []
+
+    for button in button_schematic:
+#        print(button[1:-1].split(','))
+        b = []
+        for x in str(button[1:-1]).split(','):
+            b.append(int(x))
+        buttons.append(b)
+
+    return buttons
+
+#    print(button_schematic[0][1:-1].split(','))
+#    return [tuple([int(x)]) for button in button_schematic for x in str(button[1:-1]).split(',')]
+
+
+def parse_factory_machines(schematics):
+    # input: [['[.##.]', '(3)', '(1,3)', '(2)', '(2,3)', '(0,2)', '(0,1)', '{3,5,4,7}'], ...]
+    # output: [['.##.', [(3), (1,3), (2), (2,3), (0,2), (0,1)], '{3,5,4,7}'], ...]
+
+    machines = []
+
+    for machine in schematics:
+        machines.append([machine[0][1:-1], parse_buttons(machine[1:-1]), machine[-1]])
+
+    # ['.##.', [(3) (1,3) (2) (2,3) (0,2) (0,1)], '{3,5,4,7}']
+    return machines
+
+
+def day10():
+    data = [line.strip() for line in open('input10.txt')]
+    start_time = time.time()
+
+    task1 = None
+    task2 = None
+
+    return time.time() - start_time, task1, task2
+    
+
+##############
+
+def build_device_graph(devices):
+    # aaa: you hhh
+    graph = {}
+    for device in devices:
+        graph[device[0][:-1]] = device[1:]
+
+    return graph
+
+def reverse_device_graph(devices):
+    # aaa: you hhh
+    graph = {}
+    for device in devices:
+        for output in device[1:]:
+            if output in graph:
+                graph[output].append(device[0][:-1])
+            else:
+                graph[output] = [device[0][:-1]]
+
+    return graph
+
+class Paths:
+    def __init__(self, graph):
+        self.graph = graph
+
+    @functools.cache
+    def count_paths(self, node):
+        return 1 if node == "out" else sum([self.count_paths(n) for n in self.graph[node]])
+
+    @functools.cache
+    def count_dac_fft_paths(self, node, dac = False, fft = False):
+        match node:
+            case "out": return 1 if (dac and fft) else 0
+            case "dac": dac = True
+            case "fft": fft = True
+
+        return sum([self.count_dac_fft_paths(n, dac, fft) for n in self.graph[node]])
+
+def day11():
+    data = [line.strip().split(' ') for line in open('input11.txt')]
+    start_time = time.time()
+
+    graph = build_device_graph(data)
+
+    paths = Paths(graph)
+    task1 = paths.count_paths("you")
+    task2 = paths.count_dac_fft_paths("svr")
+
+    return time.time() - start_time, task1, task2
+    
