@@ -614,3 +614,34 @@ def day11():
 
     return time.time() - start_time, task1, task2
     
+
+##############
+
+"""Naive solution(s) for task 1: 
+* (very naive solution) each gift is size <= 7. If the containing grid is < 7 * no. of gifts - answer is no 
+* check if bounding boxes fit in the given grid - if so, all good.
+(Thanks subreddit :-)
+"""
+
+def enough_spaces(no_gifts, xmas_tree_space):
+    gift_space = 7 * no_gifts
+    return gift_space <= xmas_tree_space[0] * xmas_tree_space[1]
+
+def bounding_boxes_fit(no_gifts, xmas_tree_space):
+    return xmas_tree_space[0] >= no_gifts * 3 and xmas_tree_space[1] >= no_gifts * 3
+
+def day12():
+    data = [line.strip() for line in open('input12.txt')]
+
+    trees = [tree.split(':') for tree in data[31:]]
+
+    tree_spaces = [[int(d) for d in tree[0].split('x')] for tree in trees]
+    gifts = [[int(gift) for gift in tree[-1].strip().split(' ')] for tree in trees]
+
+    start_time = time.time()
+
+    task1 = sum([enough_spaces(sum(gifts[i]), tree_spaces[i]) for i in range(len(trees))])
+    task2 = None
+
+    return time.time() - start_time, task1, task2
+    

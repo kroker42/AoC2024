@@ -279,3 +279,48 @@ hhh: out""".split('\n')
         self.assertEqual(2, paths.count_dac_fft_paths("svr"))
 
 
+
+
+###############
+
+
+class TestDay12(unittest.TestCase):
+    gifts = """0:
+###
+##.
+##.
+
+1:
+###
+##.
+.##
+
+2:
+.##
+###
+##.
+
+3:
+##.
+###
+##.
+
+4:
+###
+#..
+###
+
+5:
+###
+.#.
+###""".split('\n')
+    trees = """4x4: 0 0 0 0 2 0
+12x5: 1 0 1 0 2 2
+12x5: 1 0 1 0 3 2""".split('\n')
+
+    def test_task1(self):
+        trees = [tree.split(':') for tree in self.trees]
+        tree_spaces = [[int(d) for d in tree[0].split('x')] for tree in trees]
+        gifts = [[int(gift) for gift in tree[-1].strip().split(' ')] for tree in trees]
+
+        self.assertEqual(3, sum([elftasks.enough_spaces(sum(gifts[i]), tree_spaces[i]) for i in range(len(trees))]))
