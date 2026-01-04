@@ -424,67 +424,96 @@ def day7():
 
 ##############
 
-def brute_force_distances(points):
-    distances = {}
-    for p in points:
-        for q in points:
-            d = int(math.dist(p, q))
-            if d not in distances:
-                distances[d] = []
-            distances[d].append((tuple([int(x) for x in p]), tuple([int(x) for x in q])))
+class Distance:
+    def __init__(self, p, q):
+        self.p = p
+        self.q = q
+        self.distance = math.dist(p, q)
 
-    distances.pop(0)
-    return distances
+    def __repr__(self):
+        return f"Distance({self.p}, {self.q}, {self.distance})"
 
-def find_clusters(distances, no_pairs):
+# 162,817,812 and 425,690,689
+
+def all_pairwise_distances(points):
+    distances = []
+    for p in range(len(points) - 1):
+        for q in range(p + 1, len(points)):
+            distances.append(Distance(points[p], points[q]))
+    return sorted(distances, key=lambda x: x.distance)
+
+def find_shortest_clusters(distances, n = 10):
     clusters = []
-    found_distances = 0
-    for bucket in sorted(distances):
-        if found_distances >= no_pairs:
-#            print(found_distances)
-            break
+    for i in range(n):
+        found_cluster = None
+        delete_clusters = []
 
-#        print(found_distances, bucket)
+        for c in clusters:
+            if distances[i].p in c or distances[i].q in c:
+                c.add(distances[i].p)
+                c.add(distances[i].q)
 
-        for p, q in distances[bucket]:
-            found = False
-            for cluster in clusters:
-                if p in cluster:
-                    if q not in cluster:
-                        cluster[p].add(q)
-                        cluster[q] = {p}
-                        found_distances += 1
-                    elif q not in cluster[p]:
-                        cluster[p].add(q)
-                        cluster[q].add(p)
-                    found = True
-                    break
-                elif q in cluster:
-                    cluster[p] = {q}
-                    cluster[q].add(p)
-                    found_distances += 1
-                    found = True
-                    break
-            if not found:
-                clusters.append({p: {q}, q:{p}})
-                found_distances += 1
+                if found_cluster is None:
+                    found_cluster = c
+                else:
+                    found_cluster.update(c)
+                    delete_clusters.append(c)
+
+        if found_cluster is None:
+            clusters.append({distances[i].p, distances[i].q})
+        else:
+            for c in delete_clusters:
+                clusters.remove(c)
 
     return clusters
+
+def find_single_cluster(distances, no_junctions):
+    clusters = []
+    i = 0
+    while i < len(distances):
+        found_cluster = None
+        delete_clusters = []
+
+        for c in clusters:
+            if distances[i].p in c or distances[i].q in c:
+                c.add(distances[i].p)
+                c.add(distances[i].q)
+
+                if found_cluster is None:
+                    found_cluster = c
+                else:
+                    found_cluster.update(c)
+                    delete_clusters.append(c)
+
+        if found_cluster is None:
+            clusters.append({distances[i].p, distances[i].q})
+        else:
+            for c in delete_clusters:
+                clusters.remove(c)
+
+            if len(found_cluster) == no_junctions:
+                break
+
+        i += 1
+
+    if len(clusters) != 1 or len(clusters[0]) != no_junctions:
+        raise Exception("No single cluster found")
+
+    return distances[i].p[0] * distances[i].q[0]
+
+
 
 def day8():
     data = [line.strip() for line in open('input8.txt')]
     start_time = time.time()
 
-    points = [[int(x) for x in line.split(',')] for line in data]
-    points.sort()
-    points = np.array(points)
-
-    distances = brute_force_distances(points)
-    clusters = find_clusters(distances, 1000)
-    cluster_sizes = list(sorted([len(c) for c in clusters], reverse=True))
+    points = [tuple([int(x) for x in line.split(',')]) for line in data]
+    distances = all_pairwise_distances(points)
+    clusters = find_shortest_clusters(distances, 1000)
+    cluster_sizes = sorted([len(c) for c in clusters], reverse=True)
 
     task1 = functools.reduce(operator.mul, cluster_sizes[0:3])
-    task2 = None
+    task2 = find_single_cluster(distances, len(points))
 
     return time.time() - start_time, task1, task2
     

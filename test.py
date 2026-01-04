@@ -188,20 +188,18 @@ class TestDay8(unittest.TestCase):
 862,61,35
 984,92,344
 425,690,689""".split('\n')
-    def test_task1(self):
-        points = [[int(x) for x in line.split(',')] for line in self.data]
-        points.sort()
-        points = np.array(points)
 
-        distances = elftasks.brute_force_distances(points)
-#        print(len(distances))
-#        for key in sorted(distances):
-#            print(key, distances[key])
+    def test_pairwise_distances(self):
+        points = [tuple([int(x) for x in line.split(',')]) for line in self.data]
+        distances = elftasks.all_pairwise_distances(points)
+        clusters = elftasks.find_shortest_clusters(distances)
+        self.assertEqual([5, 4, 2, 2], sorted([len(c) for c in clusters]))
 
-        clusters = elftasks.find_clusters(distances, 10)
+    def test_single_cluster(self):
+        points = [tuple([int(x) for x in line.split(',')]) for line in self.data]
+        distances = elftasks.all_pairwise_distances(points)
+        self.assertEqual(25272, elftasks.find_single_cluster(distances, len(points)))
 
-        cluster_sizes = list(sorted([len(c) for c in clusters], reverse=True))
-        self.assertEqual(40, functools.reduce(operator.mul, cluster_sizes[0:3]))
 
 ###############
 
